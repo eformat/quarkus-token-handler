@@ -1,0 +1,11 @@
+version: '3'
+services:
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:15.0.0
+    ports:
+      - "8443:8443"
+    environment:
+      DB_VENDOR: h2
+      KEYCLOAK_USER: admin
+      KEYCLOAK_PASSWORD: admin

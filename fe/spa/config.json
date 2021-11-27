@@ -1,0 +1,6 @@
+{
+    "businessApiBaseUrl": "https://api.example.com:9443/api",
+    "oauth": {
+        "bffApiBaseUrl": "https://api.example.com:9443/bff"
+    }
+}
