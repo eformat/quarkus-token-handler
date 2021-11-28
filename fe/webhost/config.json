@@ -1,0 +1,6 @@
+{
+    "port": 443,
+    "apiBaseUrl": "https://api.example.com:9443",
+    "keystoreFilePath": "example.server.p12",
+    "keystorePassword": "password"
+}

@@ -19,7 +19,7 @@ import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 
-@Path("/bff")
+@Path("/tokenhandler")
 public class TokenHandlerResource {
 
     private final Logger log = LoggerFactory.getLogger(TokenHandlerResource.class);
@@ -82,14 +82,14 @@ function getAuthorizationURL(config: BFFConfiguration): AuthorizationRequestData
         } catch (NoSuchAlgorithmException e) {
             e.printStackTrace();
         }
-        url.append("http://login.example.com:8080/auth/realms/bff/protocol/openid-connect/auth?");
+        url.append("https://login.example.com:8443/auth/realms/bff/protocol/openid-connect/auth?"); // https://localhost:8443/auth/realms/master/protocol/openid-connect/auth
         url.append("client_id=bff_client");
         url.append("&state=" + state);
         url.append("&response_type=code");
         url.append("&scope=openid");
         url.append("&code_challenge=" + util.getCodeChallenge(codeVerifier));
         url.append("&code_challenge_method=S256");
-        url.append("&redirect_uri=http://www.example.com/");
+        url.append("&redirect_uri=https://www.example.com/");
 
         // FIXME - Set cookie
         // https://quarkus.io/guides/security-openid-connect-web-authentication#oidc-cookies

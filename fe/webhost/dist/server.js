@@ -4,15 +4,22 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
+const fs_1 = __importDefault(require("fs"));
+const https_1 = __importDefault(require("https"));
 const path_1 = __importDefault(require("path"));
-const app = express_1.default();
 /*
- * First write security headers
+ * First load configuration
  */
+const buffer = fs_1.default.readFileSync('config.json');
+const configuration = JSON.parse(buffer.toString());
+/*
+ * Write security headers when a request is first received
+ */
+const app = express_1.default();
 app.use((request, response, next) => {
     let policy = "default-src 'none';";
     policy += " script-src 'self';";
-    policy += " connect-src 'self' https://api.example.com:9443;";
+    policy += ` connect-src 'self' ${configuration.apiBaseUrl};`;
     policy += " img-src 'self';";
     policy += " style-src 'self' https://cdn.jsdelivr.net;";
     policy += " object-src 'none'";
@@ -22,17 +29,30 @@ app.use((request, response, next) => {
     next();
 });
 /*
- * Then serve static content
+ * Then serve static content, which is done from a different path when running in a deployed container
  */
-let port = 0;
 if (process.env.NODE_ENV === 'production') {
     app.use(express_1.default.static('./content'));
-    port = 3000;
 }
 else {
     app.use(express_1.default.static(path_1.default.resolve(__dirname, '../../spa/dist')));
-    port = 80;
 }
-app.listen(port, () => {
-    console.log(`Web Host is listening on internal HTTP port ${port}`);
-});
+/*
+ * Start listening on either HTTP or HTTPS, depending on configuration
+ */
+if (configuration.keystoreFilePath) {
+    const keystore = fs_1.default.readFileSync(configuration.keystoreFilePath);
+    const sslOptions = {
+        pfx: keystore,
+        passphrase: configuration.keystorePassword,
+    };
+    const httpsServer = https_1.default.createServer(sslOptions, app);
+    httpsServer.listen(configuration.port, () => {
+        console.log(`Web Host is listening on HTTPS port ${configuration.port}`);
+    });
+}
+else {
+    app.listen(configuration.port, () => {
+        console.log(`Web Host is listening on HTTP port ${configuration.port}`);
+    });
+}
