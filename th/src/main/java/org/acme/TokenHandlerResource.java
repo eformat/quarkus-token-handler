@@ -2,6 +2,7 @@ package org.acme;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.smallrye.mutiny.Uni;
 import io.vertx.core.json.JsonObject;
 import org.acme.data.AuthorizationRequestData;
 import org.acme.data.CookieName;
@@ -142,9 +143,29 @@ public class TokenHandlerResource {
 
     @POST
     @Path("/logout")
-    public String logout() {
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response logout(@Context ResteasyReactiveRequestContext context) {
         log.info("logout");
-        return "logout";
+
+        try {
+            requestValidator.validateRequest(context, new ValidateRequestOptions(true, false)); // FIXME ValidateRequestOptions
+        } catch (UnauthorizedException ex) {
+            log.warn(ex.getMessage());
+            return Response.status(ex.getStatusCode()).build();
+        }
+
+        Response.ResponseBuilder responseBuilder = Response.ok();
+        JsonObject logout = null;
+        if (!context.getCookieParameter(cookieName.REFRESH()).isEmpty()) {
+            authorizationClient.getCookiesForUnset(responseBuilder);
+            logout = authorizationClient.logout(context.getCookieParameter(cookieName.REFRESH()));
+        } else {
+            log.warn("No cookie was supplied during logout");
+            return Response.status(RestResponse.StatusCode.UNAUTHORIZED).build();
+        }
+
+        return responseBuilder.entity(logout).build();
     }
 
     @POST

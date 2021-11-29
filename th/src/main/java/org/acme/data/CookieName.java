@@ -20,13 +20,13 @@ public class CookieName {
         return cookieNamePrefix + "-id";
     }
 
-    // usually bearer api token
+    // usually bearer access token
     public String ACCESS () {
         return cookieNamePrefix + "-at";
     }
 
     // usually refresh token
-    public String AUTH () {
+    public String REFRESH() {
         return cookieNamePrefix + "-auth";
     }
 

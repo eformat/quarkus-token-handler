@@ -1,6 +1,7 @@
 package org.acme;
 
 import org.acme.data.ValidateRequestOptions;
+import org.acme.exceptions.ForbiddenException;
 import org.acme.exceptions.UnauthorizedException;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.resteasy.reactive.server.core.ResteasyReactiveRequestContext;
@@ -25,7 +26,7 @@ public class RequestValidator {
     private void _validate(String csrfHeader, String csrfCookie, String origin, ValidateRequestOptions options) throws UnauthorizedException {
 
         if (origin == null || !trustedWebOrigins.contains(origin)) {
-            throw new UnauthorizedException("The call is from an untrusted web origin: " + origin);
+            throw new ForbiddenException("The call is from an untrusted web origin: " + origin);
         }
 
     }

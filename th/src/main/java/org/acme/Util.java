@@ -1,5 +1,6 @@
 package org.acme;
 
+import org.acme.exceptions.ForbiddenException;
 import org.acme.exceptions.UnauthorizedException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -105,7 +106,7 @@ public class Util {
 
         } catch (Exception e) {
             log.warn(e.getMessage());
-            throw new UnauthorizedException("Cookie encryption failed");
+            throw new ForbiddenException("Cookie encryption failed");
         }
         return cipherText;
     }
@@ -117,7 +118,7 @@ public class Util {
 
         } catch (Exception e) {
             log.warn(e.getMessage());
-            throw new UnauthorizedException("Cookie decryption failed");
+            throw new ForbiddenException("Cookie decryption failed");
         }
         return plainText;
     }
