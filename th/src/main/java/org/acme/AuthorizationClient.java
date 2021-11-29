@@ -92,6 +92,22 @@ public class AuthorizationClient {
         //.onFailure(); FIXME error handler
     }
 
+    public JsonObject refreshAccessToken(String encryptedCookie) {
+        String decryptedCookie = util.decryptCookieValue(encryptedCookie);
+        MultiMap form = MultiMap.caseInsensitiveMultiMap();
+        form.add("grant_type", "refresh_token");
+        form.add("client_id", clientId);
+        form.add("client_secret", clientSecret);
+        form.add("refresh_token", decryptedCookie);
+        WebClientOptions options = new WebClientOptions().setKeepAlive(true).setSsl(true).setVerifyHost(false).setTrustAll(true); // FIXME Trust CA
+        Uni<JsonObject> response = WebClient.create(vertx, options)
+                .postAbs(authServer + "/auth/realms/" + realm + "/protocol/openid-connect/token")
+                .putHeader("Content-Type", ContentType.APPLICATION_FORM_URLENCODED.toString())
+                .sendForm(form)
+                .onItem().transform(HttpResponse::bodyAsJsonObject); //.onFailure(); FIXME error handler
+        return response.await().indefinitely();
+    }
+
     public AuthorizationRequestData getAuthRequestData() {
         StringBuilder url = new StringBuilder();
         String state = null;
@@ -115,11 +131,22 @@ public class AuthorizationClient {
     }
 
     public void getCookiesForTokenResponse(Response.ResponseBuilder responseBuilder, JsonObject tokenResponse, boolean unsetLoginCookie, String csrfToken) {
-        responseBuilder
-                .header("Set-Cookie", cookieName.ID() + "=" + util.encryptCookieValue(tokenResponse.getString("id_token")) + "; Secure; HttpOnly; SameSite=strict; Domain=.example.com; Path=/;")
-                .header("Set-Cookie", cookieName.ACCESS() + "=" + util.encryptCookieValue(tokenResponse.getString("access_token")) + "; Secure; HttpOnly; SameSite=strict; Domain=.example.com; Path=/;")
-                .header("Set-Cookie", cookieName.REFRESH() + "=" + util.encryptCookieValue(tokenResponse.getString("refresh_token")) + "; Secure; HttpOnly; SameSite=strict; Domain=.example.com; Path=/;")
-                .header("Set-Cookie", cookieName.CSRF() + "=" + util.encryptCookieValue(csrfToken) + "; Secure; HttpOnly; SameSite=strict; Domain=.example.com; Path=/;");
+        if (!tokenResponse.getString("id_token").isEmpty()) {
+            responseBuilder
+                    .header("Set-Cookie", cookieName.ID() + "=" + util.encryptCookieValue(tokenResponse.getString("id_token")) + "; Secure; HttpOnly; SameSite=strict; Domain=.example.com; Path=/;");
+        }
+        if (!tokenResponse.getString("access_token").isEmpty()) {
+            responseBuilder
+                    .header("Set-Cookie", cookieName.ACCESS() + "=" + util.encryptCookieValue(tokenResponse.getString("access_token")) + "; Secure; HttpOnly; SameSite=strict; Domain=.example.com; Path=/;");
+        }
+        if (!tokenResponse.getString("refresh_token").isEmpty()) {
+            responseBuilder
+                    .header("Set-Cookie", cookieName.REFRESH() + "=" + util.encryptCookieValue(tokenResponse.getString("refresh_token")) + "; Secure; HttpOnly; SameSite=strict; Domain=.example.com; Path=/;");
+        }
+        if (!csrfToken.isEmpty()) {
+            responseBuilder
+                    .header("Set-Cookie", cookieName.CSRF() + "=" + util.encryptCookieValue(csrfToken) + "; Secure; HttpOnly; SameSite=strict; Domain=.example.com; Path=/;");
+        }
         if (unsetLoginCookie) {
             var epoch = Instant.EPOCH.atZone(ZoneOffset.UTC);
             responseBuilder

@@ -170,9 +170,30 @@ public class TokenHandlerResource {
 
     @POST
     @Path("/refresh")
-    public String refresh() {
-        log.info("refresh");
-        return "refresh";
+    public Response refresh(@Context ResteasyReactiveRequestContext context) {
+        log.info("refresh"); // FIXME SPA does not call this yet?
+
+        try {
+            requestValidator.validateRequest(context, new ValidateRequestOptions(true, false)); // FIXME ValidateRequestOptions
+        } catch (UnauthorizedException ex) {
+            log.warn(ex.getMessage());
+            return Response.status(ex.getStatusCode()).build();
+        }
+
+        Response.ResponseBuilder responseBuilder = Response.ok();
+        JsonObject tokenResponse = null;
+
+        if (!context.getCookieParameter(cookieName.REFRESH()).isEmpty()) {
+            authorizationClient.getCookiesForUnset(responseBuilder);
+            tokenResponse =  authorizationClient.refreshAccessToken(context.getCookieParameter(cookieName.REFRESH()));
+            // Write the SameSite cookies
+            authorizationClient.getCookiesForTokenResponse(responseBuilder, tokenResponse, false, null);
+        } else {
+            log.warn("No cookie was supplied during refresh");
+            return Response.status(RestResponse.StatusCode.UNAUTHORIZED).build();
+        }
+
+        return responseBuilder.build();
     }
 
     private OAuthQueryParams getOAuthQueryParams(String body) throws URISyntaxException {
