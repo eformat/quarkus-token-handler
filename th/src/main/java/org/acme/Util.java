@@ -1,5 +1,9 @@
 package org.acme;
 
+import org.acme.exceptions.UnauthorizedException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import javax.crypto.*;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.PBEKeySpec;
@@ -14,11 +18,18 @@ import java.util.Base64;
 @ApplicationScoped
 public class Util {
 
+    private static final Logger log = LoggerFactory.getLogger(Util.class);
+
+    // FIXME - These need to persisted and shared
+    public static SecretKey key = generateKey(128);
+    public static IvParameterSpec ivParameterSpec = generateIv();
+    public static final String algorithm = "AES/CBC/PKCS5Padding";
+
     public static String getCodeChallenge(String password) {
         String encodedContent = null;
         try {
             final MessageDigest md = MessageDigest.getInstance("SHA-256");
-            byte[]hashInBytes = md.digest(password.getBytes(StandardCharsets.UTF_8));
+            byte[] hashInBytes = md.digest(password.getBytes(StandardCharsets.UTF_8));
             Base64.Encoder encoder = Base64.getUrlEncoder().withoutPadding();
             encodedContent = encoder.encodeToString(hashInBytes);
         } catch (NoSuchAlgorithmException e) {
@@ -67,8 +78,14 @@ public class Util {
         return new String(plainText);
     }
 
-    public static SecretKey generateKey(int n) throws NoSuchAlgorithmException {
-        KeyGenerator keyGenerator = KeyGenerator.getInstance("AES");
+    public static SecretKey generateKey(int n) {
+        KeyGenerator keyGenerator = null;
+        try {
+            keyGenerator = KeyGenerator.getInstance("AES");
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+            System.exit(-1);
+        }
         keyGenerator.init(n);
         SecretKey key = keyGenerator.generateKey();
         return key;
@@ -79,7 +96,30 @@ public class Util {
         SecureRandom secureRandom = SecureRandom.getInstanceStrong();
         return secureRandom.ints(length, 0, chrs.length()).mapToObj(i -> chrs.charAt(i))
                 .collect(StringBuilder::new, StringBuilder::append, StringBuilder::append).toString();
+    }
 
+    public static String encryptCookieValue(String value) {
+        String cipherText = null;
+        try {
+            cipherText = encrypt(algorithm, value, key, ivParameterSpec);
+
+        } catch (Exception e) {
+            log.warn(e.getMessage());
+            throw new UnauthorizedException("Cookie encryption failed");
+        }
+        return cipherText;
+    }
+
+    public static String decryptCookieValue(String cookieParameter) throws UnauthorizedException {
+        String plainText = null;
+        try {
+            plainText = decrypt(algorithm, cookieParameter, key, ivParameterSpec);
+
+        } catch (Exception e) {
+            log.warn(e.getMessage());
+            throw new UnauthorizedException("Cookie decryption failed");
+        }
+        return plainText;
     }
 
 }
