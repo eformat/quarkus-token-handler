@@ -1,8 +1,8 @@
 package org.acme;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.smallrye.mutiny.Uni;
 import io.vertx.core.json.JsonObject;
 import org.acme.data.AuthorizationRequestData;
 import org.acme.data.CookieName;
@@ -15,16 +15,21 @@ import org.jboss.resteasy.reactive.server.core.ResteasyReactiveRequestContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.enterprise.inject.Any;
 import javax.inject.Inject;
 import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.charset.Charset;
 import java.security.NoSuchAlgorithmException;
+import java.util.Base64;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Path("/tokenhandler")
 public class TokenHandlerResource {
@@ -136,9 +141,45 @@ public class TokenHandlerResource {
 
     @GET
     @Path("/userInfo")
-    public String userInfo() {
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response userInfo(@Context ResteasyReactiveRequestContext context) {
         log.info("userInfo");
-        return "userInfo";
+
+        try {
+            requestValidator.validateRequest(context, new ValidateRequestOptions(true, false)); // FIXME ValidateRequestOptions
+        } catch (UnauthorizedException ex) {
+            log.warn(ex.getMessage());
+            return Response.status(ex.getStatusCode()).build();
+        }
+
+        String jsonResult = null;
+        if (!context.getCookieParameter(cookieName.ID()).isEmpty()) {
+            String d = util.decryptCookieValue(context.getCookieParameter(cookieName.ID()));
+            String[] sa = d.split("\\.");
+            if (sa.length != 3) {
+                log.warn("ID Cookie malformed");
+                return Response.status(RestResponse.StatusCode.BAD_REQUEST).build();
+            }
+
+            try {
+                ObjectMapper objectMapper = new ObjectMapper();
+                HashMap id = objectMapper.readValue(Base64.getDecoder().decode(sa[1]), HashMap.class);
+                jsonResult = objectMapper.writerWithDefaultPrettyPrinter()
+                        .writeValueAsString(id);
+
+            } catch (JsonProcessingException e) {
+                e.printStackTrace(); // FIXME
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+        } else {
+            log.warn("No cookie was supplied during user info");
+            return Response.status(RestResponse.StatusCode.UNAUTHORIZED).build();
+        }
+
+        return Response.ok(jsonResult).build();
     }
 
     @POST
