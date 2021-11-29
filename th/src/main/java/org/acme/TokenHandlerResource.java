@@ -5,7 +5,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.vertx.core.json.JsonObject;
 import org.acme.data.AuthorizationRequestData;
 import org.acme.data.CookieName;
-import org.acme.data.TokenResponse;
 import org.acme.data.ValidateRequestOptions;
 import org.acme.exceptions.UnauthorizedException;
 import org.apache.http.NameValuePair;
@@ -23,6 +22,7 @@ import javax.ws.rs.core.Response;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.charset.Charset;
+import java.security.NoSuchAlgorithmException;
 import java.util.List;
 
 @Path("/tokenhandler")
@@ -91,30 +91,46 @@ public class TokenHandlerResource {
         boolean isOAuthResponse = queryParams.state != null && queryParams.code != null;
 
         boolean isLoggedIn = false;
-        String csrfToken = null; // FIXME - to add
+        String csrfToken = null;
+        Response.ResponseBuilder responseBuilder = Response.ok();
 
         if (isOAuthResponse) {
-            TokenResponse tokenResponse = null;
+            JsonObject tokenResponse = null;
             try {
                 tokenResponse = authorizationClient.getTokens(context.getCookieParameter(cookieName.LOGIN()), queryParams);
             } catch (UnauthorizedException ex) {
                 log.warn(ex.getMessage());
                 return Response.status(ex.getStatusCode()).build();
             }
-
-//            val tempLoginData = request.getCookie(cookieName.tempLoginData)
-//            val tokenResponse =
-//                    authorizationServerClient.getTokens(tempLoginData, queryParams.code!!, queryParams.state!!)
+            if (null == context.getCookieParameter(cookieName.CSRF())) {
+                try {
+                    csrfToken = util.generateRandomString(64);
+                } catch (NoSuchAlgorithmException e) {
+                    e.printStackTrace(); // FIXME Exception Handling
+                }
+            } else {
+                csrfToken = util.decryptCookieValue(context.getCookieParameter(cookieName.CSRF()));
+            }
+            // Write the SameSite cookies
+            authorizationClient.getCookiesForTokenResponse(responseBuilder, tokenResponse, true, csrfToken);
+            isLoggedIn = true;
 
         } else {
+            // See if we have an access token cookie
+            isLoggedIn = context.getCookieParameter(cookieName.ACCESS()) != null;
 
+            if (isLoggedIn && null != context.getCookieParameter(cookieName.CSRF())) {
+                // During an authenticated page refresh or opening a new browser tab, we must return the anti forgery token
+                // This enables an XSS attack to get the value, but this is standard for CSRF tokens
+                csrfToken = util.decryptCookieValue(context.getCookieParameter(cookieName.CSRF()));
+            }
         }
 
         JsonObject ret = new JsonObject()
-                .put("handled", false)
-                .put("isLoggedIn", false)
+                .put("handled", isOAuthResponse)
+                .put("isLoggedIn", isLoggedIn)
                 .put("csrfToken", csrfToken);
-        return Response.ok(ret).build();
+        return responseBuilder.entity(ret).build();
     }
 
     @GET

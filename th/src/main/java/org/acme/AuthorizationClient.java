@@ -10,7 +10,7 @@ import io.vertx.mutiny.core.Vertx;
 import io.vertx.mutiny.ext.web.client.HttpResponse;
 import io.vertx.mutiny.ext.web.client.WebClient;
 import org.acme.data.AuthorizationRequestData;
-import org.acme.data.TokenResponse;
+import org.acme.data.CookieName;
 import org.acme.exceptions.InvalidStateException;
 import org.acme.exceptions.UnauthorizedException;
 import org.apache.http.entity.ContentType;
@@ -20,7 +20,11 @@ import org.slf4j.LoggerFactory;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
+import javax.ws.rs.core.Response;
 import java.security.NoSuchAlgorithmException;
+import java.time.Instant;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
 
 @ApplicationScoped
 public class AuthorizationClient {
@@ -45,8 +49,25 @@ public class AuthorizationClient {
     @Inject
     Util util;
 
-    public TokenResponse getTokens(String encryptedCookie, TokenHandlerResource.OAuthQueryParams queryParams) throws UnauthorizedException {
-        TokenResponse tokenResponse = null;
+    @Inject
+    CookieName cookieName;
+
+
+    public void getCookiesForTokenResponse(Response.ResponseBuilder responseBuilder, JsonObject tokenResponse, boolean unsetLoginCookie, String csrfToken) {
+        responseBuilder
+                .header("Set-Cookie", cookieName.ID() + "=" + util.encryptCookieValue(tokenResponse.getString("id_token")) + "; Secure; HttpOnly; SameSite=strict; Domain=.example.com; Path=/;")
+                .header("Set-Cookie", cookieName.ACCESS() + "=" + util.encryptCookieValue(tokenResponse.getString("access_token")) + "; Secure; HttpOnly; SameSite=strict; Domain=.example.com; Path=/;")
+                .header("Set-Cookie", cookieName.AUTH() + "=" + util.encryptCookieValue(tokenResponse.getString("refresh_token")) + "; Secure; HttpOnly; SameSite=strict; Domain=.example.com; Path=/;")
+                .header("Set-Cookie", cookieName.CSRF() + "=" + util.encryptCookieValue(csrfToken) + "; Secure; HttpOnly; SameSite=strict; Domain=.example.com; Path=/;");
+        if (unsetLoginCookie) {
+            var epoch = Instant.EPOCH.atZone(ZoneOffset.UTC);
+            responseBuilder
+                    .header("Set-Cookie", cookieName.LOGIN() + "=; Secure; HttpOnly; SameSite=strict; Domain=.example.com; Path=/; Expires=" + epoch.format(DateTimeFormatter.RFC_1123_DATE_TIME));
+        }
+    }
+
+
+    public JsonObject getTokens(String encryptedCookie, TokenHandlerResource.OAuthQueryParams queryParams) throws UnauthorizedException {
         if (null == encryptedCookie) {
             throw new UnauthorizedException("No temporary login cookie found");
         }
@@ -62,8 +83,7 @@ public class AuthorizationClient {
             throw new InvalidStateException("Login cookie is invalid");
         }
         Uni<JsonObject> response = exchangeCodeForTokens(queryParams.code(), authorizationRequestData.getCodeVerifier());
-        log.info(">>> response " + response.await().indefinitely());
-        return tokenResponse;
+        return response.await().indefinitely();
     }
 
     public Uni<JsonObject> exchangeCodeForTokens(String code, String codeVerifier) {
