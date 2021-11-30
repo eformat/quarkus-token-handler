@@ -16,6 +16,6 @@ npm run start
 Token Handler
 ```bash
 cd th
-export CLIENT_SECRET=1cd70bdf-db5b-4346-83da-babe16dae1d8
+export CLIENT_SECRET=<from keycloak the bff client credential secret>
 mvn quarkus:dev
 ```
