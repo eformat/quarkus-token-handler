@@ -107,7 +107,7 @@ public class TokenHandlerResource {
                 log.warn(ex.getMessage());
                 return Response.status(ex.getStatusCode()).build();
             }
-            log.info(tokenResponse.encode());
+            log.debug(tokenResponse.encode());
             if (null == context.getCookieParameter(cookieName.CSRF())) {
                 try {
                     csrfToken = util.generateRandomString(64);
@@ -155,16 +155,22 @@ public class TokenHandlerResource {
 
         String jsonResult = null;
         if (!context.getCookieParameter(cookieName.ID()).isEmpty()) {
-            String d = util.decryptCookieValue(context.getCookieParameter(cookieName.ID()));
-            String[] sa = d.split("\\.");
-            if (sa.length != 3) {
+            String decrytedCookie = null;
+            try {
+                 decrytedCookie = util.decryptCookieValue(context.getCookieParameter(cookieName.ID()));
+            } catch (ForbiddenException ex) {
+                log.warn(ex.getMessage());
+                return Response.status(ex.getStatusCode()).build();
+            }
+            String[] parts = decrytedCookie.split("\\.");
+            if (parts.length != 3) {
                 log.warn("ID Cookie malformed");
                 return Response.status(RestResponse.StatusCode.BAD_REQUEST).build();
             }
 
             try {
                 ObjectMapper objectMapper = new ObjectMapper();
-                HashMap id = objectMapper.readValue(Base64.getDecoder().decode(sa[1]), HashMap.class);
+                HashMap id = objectMapper.readValue(Base64.getDecoder().decode(parts[1]), HashMap.class);
                 jsonResult = objectMapper.writerWithDefaultPrettyPrinter()
                         .writeValueAsString(id);
 
@@ -226,7 +232,7 @@ public class TokenHandlerResource {
 
         if (!context.getCookieParameter(cookieName.REFRESH()).isEmpty()) {
             authorizationClient.getCookiesForUnset(responseBuilder);
-            tokenResponse =  authorizationClient.refreshAccessToken(context.getCookieParameter(cookieName.REFRESH()));
+            tokenResponse = authorizationClient.refreshAccessToken(context.getCookieParameter(cookieName.REFRESH()));
             // Write the SameSite cookies
             authorizationClient.getCookiesForTokenResponse(responseBuilder, tokenResponse, false, null);
         } else {
@@ -245,7 +251,7 @@ public class TokenHandlerResource {
         List<NameValuePair> params = URLEncodedUtils.parse(new URI(pageUrl.getValue("pageUrl").toString()), Charset.forName("UTF-8"));
         String code = null;
         String state = null;
-        for(NameValuePair nvp : params) { // FIXME clumsy
+        for (NameValuePair nvp : params) { // FIXME clumsy
             switch (nvp.getName()) {
                 case "code":
                     code = nvp.getValue();
