@@ -1,7 +1,6 @@
 package org.acme;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.vertx.core.json.JsonObject;
 import org.acme.data.AuthorizationRequestData;
@@ -15,7 +14,6 @@ import org.jboss.resteasy.reactive.server.core.ResteasyReactiveRequestContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.enterprise.inject.Any;
 import javax.inject.Inject;
 import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
@@ -29,7 +27,6 @@ import java.security.NoSuchAlgorithmException;
 import java.util.Base64;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 @Path("/tokenhandler")
 public class TokenHandlerResource {
@@ -79,6 +76,7 @@ public class TokenHandlerResource {
     @Produces(MediaType.APPLICATION_JSON)
     public Response loginEnd(@Context ResteasyReactiveRequestContext context, String body) {
         log.info("loginEnd");
+        log.debug(body);
         try {
             requestValidator.validateRequest(context, new ValidateRequestOptions(true, false)); // FIXME ValidateRequestOptions
         } catch (UnauthorizedException ex) {
@@ -108,6 +106,7 @@ public class TokenHandlerResource {
                 log.warn(ex.getMessage());
                 return Response.status(ex.getStatusCode()).build();
             }
+            log.debug(tokenResponse.encode());
             if (null == context.getCookieParameter(cookieName.CSRF())) {
                 try {
                     csrfToken = util.generateRandomString(64);
@@ -198,7 +197,7 @@ public class TokenHandlerResource {
 
         Response.ResponseBuilder responseBuilder = Response.ok();
         JsonObject logout = null;
-        if (!context.getCookieParameter(cookieName.REFRESH()).isEmpty()) {
+        if (null != context.getCookieParameter(cookieName.REFRESH()) && !context.getCookieParameter(cookieName.REFRESH()).isEmpty()) {
             authorizationClient.getCookiesForUnset(responseBuilder);
             logout = authorizationClient.logout(context.getCookieParameter(cookieName.REFRESH()));
         } else {

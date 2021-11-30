@@ -131,19 +131,21 @@ public class AuthorizationClient {
     }
 
     public void getCookiesForTokenResponse(Response.ResponseBuilder responseBuilder, JsonObject tokenResponse, boolean unsetLoginCookie, String csrfToken) {
-        if (!tokenResponse.getString("id_token").isEmpty()) {
-            responseBuilder
-                    .header("Set-Cookie", cookieName.ID() + "=" + util.encryptCookieValue(tokenResponse.getString("id_token")) + "; Secure; HttpOnly; SameSite=strict; Domain=.example.com; Path=/;");
+        if (null != tokenResponse) {
+            if (tokenResponse.getString("id_token") != null && !tokenResponse.getString("id_token").isEmpty()) {
+                responseBuilder
+                        .header("Set-Cookie", cookieName.ID() + "=" + util.encryptCookieValue(tokenResponse.getString("id_token")) + "; Secure; HttpOnly; SameSite=strict; Domain=.example.com; Path=/;");
+            }
+            if (tokenResponse.getString("access_token") != null && !tokenResponse.getString("access_token").isEmpty()) {
+                responseBuilder
+                        .header("Set-Cookie", cookieName.ACCESS() + "=" + util.encryptCookieValue(tokenResponse.getString("access_token")) + "; Secure; HttpOnly; SameSite=strict; Domain=.example.com; Path=/;");
+            }
+            if (tokenResponse.getString("refresh_token") != null && !tokenResponse.getString("refresh_token").isEmpty()) {
+                responseBuilder
+                        .header("Set-Cookie", cookieName.REFRESH() + "=" + util.encryptCookieValue(tokenResponse.getString("refresh_token")) + "; Secure; HttpOnly; SameSite=strict; Domain=.example.com; Path=/;");
+            }
         }
-        if (!tokenResponse.getString("access_token").isEmpty()) {
-            responseBuilder
-                    .header("Set-Cookie", cookieName.ACCESS() + "=" + util.encryptCookieValue(tokenResponse.getString("access_token")) + "; Secure; HttpOnly; SameSite=strict; Domain=.example.com; Path=/;");
-        }
-        if (!tokenResponse.getString("refresh_token").isEmpty()) {
-            responseBuilder
-                    .header("Set-Cookie", cookieName.REFRESH() + "=" + util.encryptCookieValue(tokenResponse.getString("refresh_token")) + "; Secure; HttpOnly; SameSite=strict; Domain=.example.com; Path=/;");
-        }
-        if (!csrfToken.isEmpty()) {
+        if (null != csrfToken && !csrfToken.isEmpty()) {
             responseBuilder
                     .header("Set-Cookie", cookieName.CSRF() + "=" + util.encryptCookieValue(csrfToken) + "; Secure; HttpOnly; SameSite=strict; Domain=.example.com; Path=/;");
         }
