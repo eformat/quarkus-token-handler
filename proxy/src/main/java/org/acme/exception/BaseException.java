@@ -1,4 +1,4 @@
-package org.acme.exceptions;
+package org.acme.exception;
 
 public class BaseException extends RuntimeException {
 

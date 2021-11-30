@@ -1,11 +1,9 @@
-package org.acme.exceptions;
-
-import org.jboss.resteasy.reactive.RestResponse;
+package org.acme.exception;
 
 public class ForbiddenException extends BaseException {
 
     public ForbiddenException(String message) {
-        super(message, null, RestResponse.StatusCode.FORBIDDEN, "forbidden_request");
+        super(message, null, 403, "forbidden_request");
     }
 
 }

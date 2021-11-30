@@ -6,6 +6,7 @@ import io.vertx.core.json.JsonObject;
 import org.acme.data.AuthorizationRequestData;
 import org.acme.data.CookieName;
 import org.acme.data.ValidateRequestOptions;
+import org.acme.exceptions.ForbiddenException;
 import org.acme.exceptions.UnauthorizedException;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.utils.URLEncodedUtils;
@@ -57,7 +58,7 @@ public class TokenHandlerResource {
 
         try {
             requestValidator.validateRequest(context, new ValidateRequestOptions(true, false)); // FIXME ValidateRequestOptions
-        } catch (UnauthorizedException ex) {
+        } catch (ForbiddenException ex) {
             log.warn(ex.getMessage());
             return Response.status(ex.getStatusCode()).build();
         }
@@ -79,7 +80,7 @@ public class TokenHandlerResource {
         log.debug(body);
         try {
             requestValidator.validateRequest(context, new ValidateRequestOptions(true, false)); // FIXME ValidateRequestOptions
-        } catch (UnauthorizedException ex) {
+        } catch (ForbiddenException ex) {
             log.warn(ex.getMessage());
             return Response.status(ex.getStatusCode()).build();
         }
@@ -106,7 +107,7 @@ public class TokenHandlerResource {
                 log.warn(ex.getMessage());
                 return Response.status(ex.getStatusCode()).build();
             }
-            log.debug(tokenResponse.encode());
+            log.info(tokenResponse.encode());
             if (null == context.getCookieParameter(cookieName.CSRF())) {
                 try {
                     csrfToken = util.generateRandomString(64);
@@ -147,7 +148,7 @@ public class TokenHandlerResource {
 
         try {
             requestValidator.validateRequest(context, new ValidateRequestOptions(true, false)); // FIXME ValidateRequestOptions
-        } catch (UnauthorizedException ex) {
+        } catch (ForbiddenException ex) {
             log.warn(ex.getMessage());
             return Response.status(ex.getStatusCode()).build();
         }
@@ -190,7 +191,7 @@ public class TokenHandlerResource {
 
         try {
             requestValidator.validateRequest(context, new ValidateRequestOptions(true, false)); // FIXME ValidateRequestOptions
-        } catch (UnauthorizedException ex) {
+        } catch (ForbiddenException ex) {
             log.warn(ex.getMessage());
             return Response.status(ex.getStatusCode()).build();
         }
