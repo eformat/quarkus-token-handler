@@ -38,5 +38,5 @@ Run the Token Handler
 ```bash
 cd th
 # we need the truststore for JARM (jwt validation)
-mvn clean quarkus:dev -Djavax.net.debug=ssl,handshake -Djavax.net.ssl.trustStore=keystore.p12 -Djavax.net.ssl.trustStorePassword=password
+mvn clean quarkus:dev -Djavax.net.ssl.trustStore=keystore.p12 -Djavax.net.ssl.trustStorePassword=password
 ```
