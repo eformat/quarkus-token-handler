@@ -125,6 +125,7 @@ public class AuthorizationClient {
         url.append(authServer + "/auth/realms/" + realm + "/protocol/openid-connect/auth?");
         url.append("client_id=" + clientId);
         url.append("&state=" + state); // we should check this ourselves
+        url.append("&response_mode=jwt"); // see .well-known/openid-configuration [response_modes_supported] (JARM)
         url.append("&response_type=code"); // OAuth 2.0 Authorization Code Grant https://www.rfc-editor.org/rfc/rfc6749.html#section-4.1
         url.append("&scope=openid"); // we will get an ID token using openid scope when we exchange
         url.append("&code_challenge=" + util.getCodeChallenge(codeVerifier)); // PKCE

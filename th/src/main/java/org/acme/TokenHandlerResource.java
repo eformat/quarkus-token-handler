@@ -2,14 +2,19 @@ package org.acme;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.smallrye.jwt.auth.principal.JWTParser;
+import io.smallrye.jwt.auth.principal.ParseException;
 import io.vertx.core.json.JsonObject;
 import org.acme.data.AuthorizationRequestData;
 import org.acme.data.CookieName;
 import org.acme.data.ValidateRequestOptions;
 import org.acme.exceptions.ForbiddenException;
+import org.acme.exceptions.InvalidStateException;
 import org.acme.exceptions.UnauthorizedException;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.utils.URLEncodedUtils;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
+import org.eclipse.microprofile.jwt.JsonWebToken;
 import org.jboss.resteasy.reactive.RestResponse;
 import org.jboss.resteasy.reactive.server.core.ResteasyReactiveRequestContext;
 import org.slf4j.Logger;
@@ -45,6 +50,15 @@ public class TokenHandlerResource {
 
     @Inject
     AuthorizationClient authorizationClient;
+
+    @Inject
+    JWTParser parser;
+
+    @ConfigProperty(name = "clientId")
+    String clientId;
+
+    @ConfigProperty(name = "authServer")
+    String authServer;
 
     record OAuthQueryParams(String code, String state) {
     }
@@ -91,6 +105,7 @@ public class TokenHandlerResource {
             queryParams = getOAuthQueryParams(body);
         } catch (Exception ex) {
             log.warn(ex.getMessage());
+            ex.printStackTrace();
             return Response.status(RestResponse.StatusCode.BAD_REQUEST).build();
         }
         boolean isOAuthResponse = queryParams.state != null && queryParams.code != null;
@@ -243,25 +258,32 @@ public class TokenHandlerResource {
         return responseBuilder.build();
     }
 
-    private OAuthQueryParams getOAuthQueryParams(String body) throws URISyntaxException {
+    private OAuthQueryParams getOAuthQueryParams(String body) throws URISyntaxException, ParseException, InvalidStateException {
         if (null == body || body.length() == 0) {
             return new OAuthQueryParams(null, null);
         }
+
         JsonObject pageUrl = new JsonObject(body);
+        if (null == pageUrl.getValue("pageUrl")) {
+            return new OAuthQueryParams(null, null);
+        }
         List<NameValuePair> params = URLEncodedUtils.parse(new URI(pageUrl.getValue("pageUrl").toString()), Charset.forName("UTF-8"));
-        String code = null;
-        String state = null;
-        for (NameValuePair nvp : params) { // FIXME clumsy
+        String response = null;
+        for (NameValuePair nvp : params) {
             switch (nvp.getName()) {
-                case "code":
-                    code = nvp.getValue();
-                    break;
-                case "state":
-                    state = nvp.getValue();
+                case "response":
+                    response = nvp.getValue();
                     break;
             }
         }
-        return new OAuthQueryParams(code, state);
+        if (null == response) {
+            return new OAuthQueryParams(null, null);
+        }
+
+        // against kc
+        JsonWebToken jwt = parser.parse(response);
+
+        return new OAuthQueryParams(jwt.getClaim("code"), jwt.getClaim("state"));
     }
 
     private String getCookieValue(AuthorizationRequestData authRequestData) {
