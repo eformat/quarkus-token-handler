@@ -12,8 +12,8 @@ RESPONSE_FILE=data/response.txt
 LOGIN_COOKIES_FILE=data/login_cookies.txt
 KEYCLOAK_COOKIES_FILE=data/keycloak_cookies.txt
 MAIN_COOKIES_FILE=data/main_cookies.txt
-TEST_USERNAME=mike
-TEST_PASSWORD=password99_
+TEST_USERNAME=user
+TEST_PASSWORD=password
 CLIENT_ID=bff_client
 #export http_proxy='http://127.0.0.1:8888'
 
@@ -113,8 +113,6 @@ if [ "$APP_URL" == '' ]; then
 fi
 PAGE_URL_JSON='{"pageUrl":"'$APP_URL'"}'
 echo $PAGE_URL_JSON | jq
-
-exit
 
 #
 # End the login by swapping the code for tokens
