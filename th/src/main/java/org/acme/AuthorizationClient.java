@@ -25,6 +25,7 @@ import javax.ws.rs.core.Response;
 import java.security.NoSuchAlgorithmException;
 import java.time.Instant;
 import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 
 @ApplicationScoped
@@ -46,6 +47,9 @@ public class AuthorizationClient {
 
     @ConfigProperty(name = "realm")
     String realm;
+
+    @ConfigProperty(name = "cookieExpiresSec")
+    int cookieExpiresSec;
 
     @Inject
     Vertx vertx;
@@ -131,23 +135,29 @@ public class AuthorizationClient {
     }
 
     public void getCookiesForTokenResponse(Response.ResponseBuilder responseBuilder, JsonObject tokenResponse, boolean unsetLoginCookie, String csrfToken) {
+        String expires = "";
+        if (cookieExpiresSec > -1) {
+            expires = "; Max-Age=" + cookieExpiresSec;
+            ZonedDateTime expiry = ZonedDateTime.now().plusSeconds(cookieExpiresSec);
+            expires += "; Expires=" + expiry.format(DateTimeFormatter.RFC_1123_DATE_TIME);
+        }
         if (null != tokenResponse) {
             if (tokenResponse.getString("id_token") != null && !tokenResponse.getString("id_token").isEmpty()) {
                 responseBuilder
-                        .header("Set-Cookie", cookieName.ID() + "=" + util.encryptCookieValue(tokenResponse.getString("id_token")) + "; Secure; HttpOnly; SameSite=strict; Domain=.example.com; Path=/;");
+                        .header("Set-Cookie", cookieName.ID() + "=" + util.encryptCookieValue(tokenResponse.getString("id_token")) + "; Secure; HttpOnly; SameSite=strict; Domain=.example.com; Path=/;" + expires);
             }
             if (tokenResponse.getString("access_token") != null && !tokenResponse.getString("access_token").isEmpty()) {
                 responseBuilder
-                        .header("Set-Cookie", cookieName.ACCESS() + "=" + util.encryptCookieValue(tokenResponse.getString("access_token")) + "; Secure; HttpOnly; SameSite=strict; Domain=.example.com; Path=/;");
+                        .header("Set-Cookie", cookieName.ACCESS() + "=" + util.encryptCookieValue(tokenResponse.getString("access_token")) + "; Secure; HttpOnly; SameSite=strict; Domain=.example.com; Path=/;" + expires);
             }
             if (tokenResponse.getString("refresh_token") != null && !tokenResponse.getString("refresh_token").isEmpty()) {
                 responseBuilder
-                        .header("Set-Cookie", cookieName.REFRESH() + "=" + util.encryptCookieValue(tokenResponse.getString("refresh_token")) + "; Secure; HttpOnly; SameSite=strict; Domain=.example.com; Path=/;");
+                        .header("Set-Cookie", cookieName.REFRESH() + "=" + util.encryptCookieValue(tokenResponse.getString("refresh_token")) + "; Secure; HttpOnly; SameSite=strict; Domain=.example.com; Path=/;" + expires);
             }
         }
         if (null != csrfToken && !csrfToken.isEmpty()) {
             responseBuilder
-                    .header("Set-Cookie", cookieName.CSRF() + "=" + util.encryptCookieValue(csrfToken) + "; Secure; HttpOnly; SameSite=strict; Domain=.example.com; Path=/;");
+                    .header("Set-Cookie", cookieName.CSRF() + "=" + util.encryptCookieValue(csrfToken) + "; Secure; HttpOnly; SameSite=strict; Domain=.example.com; Path=/;" + expires);
         }
         if (unsetLoginCookie) {
             var epoch = Instant.EPOCH.atZone(ZoneOffset.UTC);
