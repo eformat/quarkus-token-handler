@@ -334,19 +334,16 @@ echo '17. POST to /refresh with correct secure details completed successfully'
 echo '18. Testing POST to /refresh with rotated refresh token ...'
 HTTP_STATUS=$(curl -k -i -s -X POST "$BFF_API_BASE_URL/refresh" \
 -H "origin: $WEB_BASE_URL" \
--H "origin: $WEB_BASE_URL" \
 -H 'content-type: application/json' \
 -H 'accept: application/json' \
 -H "x-example-csrf: $CSRF" \
 -b $MAIN_COOKIES_FILE \
 -o $RESPONSE_FILE -w '%{http_code}')
-if [ "$HTTP_STATUS" != '401' ]; then
+if [ "$HTTP_STATUS" != '200' ]; then
   echo "*** Refresh request failed with status $HTTP_STATUS"
   exit
 fi
 echo '18. POST to /refresh with rotated refresh token completed successfully'
-
-exit
 
 #
 # Test logging out with an invalid origin
@@ -374,16 +371,9 @@ HTTP_STATUS=$(curl -k -i -s -X POST "$BFF_API_BASE_URL/logout" \
 -H 'accept: application/json' \
 -d '{"pageUrl":"'$WEB_BASE_URL'"}' \
 -o $RESPONSE_FILE -w '%{http_code}')
-if [ "$HTTP_STATUS" != '401' ]; then
+if [ "$HTTP_STATUS" != '403' ]; then
   echo '*** Invalid logout request did not fail as expected'
   exit
-fi
-JSON=$(tail -n 1 $RESPONSE_FILE)
-echo $JSON | jq
-CODE=$(jq -r .code <<< "$JSON")
-if [ "$CODE" != 'unauthorized_request' ]; then
-   echo "*** Logout returned an unexpected error code"
-   exit
 fi
 echo '20. POST to logout without secure cookies was successfully rejected'
 
@@ -398,16 +388,9 @@ HTTP_STATUS=$(curl -k -i -s -X POST "$BFF_API_BASE_URL/logout" \
 -H "x-example-csrf: abc123" \
 -b $MAIN_COOKIES_FILE \
 -o $RESPONSE_FILE -w '%{http_code}')
-if [ "$HTTP_STATUS" != '401' ]; then
+if [ "$HTTP_STATUS" != '403' ]; then
   echo '*** Invalid logout request did not fail as expected'
   exit
-fi
-JSON=$(tail -n 1 $RESPONSE_FILE)
-echo $JSON | jq
-CODE=$(jq -r .code <<< "$JSON")
-if [ "$CODE" != 'unauthorized_request' ]; then
-   echo "*** Logout returned an unexpected error code"
-   exit
 fi
 echo '21. POST to logout with incorrect anti forgery token was successfully rejected'
 
@@ -427,18 +410,17 @@ if [ "$HTTP_STATUS" != '200' ]; then
   exit
 fi
 echo '22. POST to logout with correct secure details completed successfully'
-JSON=$(tail -n 1 $RESPONSE_FILE)
-echo $JSON | jq
 
 #
 # Test following the end session redirect to sign out in the Curity Identity Server
 #
 echo '23. Testing following the end session redirect redirect ...'
+JSON=$(tail -n 1 $RESPONSE_FILE)
 END_SESSION_REQUEST_URL=$(jq -r .url <<< "$JSON")
 HTTP_STATUS=$(curl -k -i -s -X GET $END_SESSION_REQUEST_URL \
 -c $CURITY_COOKIES_FILE \
 -o $RESPONSE_FILE -w '%{http_code}')
-if [ $HTTP_STATUS != '303' ]; then
+if [ $HTTP_STATUS != '200' ]; then
   echo "*** Problem encountered during an OpenID Connect end session redirect, status: $HTTP_STATUS"
   exit
 fi
@@ -459,3 +441,5 @@ if [ "$HTTP_STATUS" != '400' ]; then
   exit
 fi
 echo '24. Malformed JSON was handled in the expected manner'
+
+echo ">>> 🌈 TESTING COMPLETED OK 🌈"
