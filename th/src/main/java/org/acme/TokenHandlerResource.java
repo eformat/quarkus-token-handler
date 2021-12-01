@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.smallrye.jwt.auth.principal.JWTParser;
 import io.smallrye.jwt.auth.principal.ParseException;
+import io.vertx.core.json.DecodeException;
 import io.vertx.core.json.JsonObject;
 import org.acme.data.AuthorizationRequestData;
 import org.acme.data.CookieName;
@@ -105,7 +106,6 @@ public class TokenHandlerResource {
             queryParams = getOAuthQueryParams(body);
         } catch (Exception ex) {
             log.warn(ex.getMessage());
-            ex.printStackTrace();
             return Response.status(RestResponse.StatusCode.BAD_REQUEST).build();
         }
         boolean isOAuthResponse = queryParams.state != null && queryParams.code != null;
@@ -258,7 +258,7 @@ public class TokenHandlerResource {
         return responseBuilder.build();
     }
 
-    private OAuthQueryParams getOAuthQueryParams(String body) throws URISyntaxException, ParseException, InvalidStateException {
+    private OAuthQueryParams getOAuthQueryParams(String body) throws URISyntaxException, ParseException, InvalidStateException, DecodeException {
         if (null == body || body.length() == 0) {
             return new OAuthQueryParams(null, null);
         }
