@@ -272,7 +272,7 @@ HTTP_STATUS=$(curl -k -i -s -X POST "$BFF_API_BASE_URL/refresh" \
 -H 'content-type: application/json' \
 -H 'accept: application/json' \
 -o $RESPONSE_FILE -w '%{http_code}')
-if [ "$HTTP_STATUS" != '401' ]; then
+if [ "$HTTP_STATUS" != '403' ]; then
   echo '*** Invalid token refresh request did not fail as expected'
   exit
 fi
@@ -288,13 +288,11 @@ HTTP_STATUS=$(curl -k -i -s -X POST "$BFF_API_BASE_URL/refresh" \
 -H 'accept: application/json' \
 -b $MAIN_COOKIES_FILE \
 -o $RESPONSE_FILE -w '%{http_code}')
-if [ "$HTTP_STATUS" != '401' ]; then
+if [ "$HTTP_STATUS" != '403' ]; then
   echo '*** Invalid token refresh request did not fail as expected'
   exit
 fi
 echo '15. POST to /refresh without CSRF token was handled correctly'
-
-exit
 
 #
 # Test refreshing a token with secure cookies but with an incorrect anti forgery token
@@ -307,16 +305,9 @@ HTTP_STATUS=$(curl -k -i -s -X POST "$BFF_API_BASE_URL/refresh" \
 -H 'x-example-csrf: abc123' \
 -b $MAIN_COOKIES_FILE \
 -o $RESPONSE_FILE -w '%{http_code}')
-if [ "$HTTP_STATUS" != '401' ]; then
+if [ "$HTTP_STATUS" != '403' ]; then
   echo '*** Invalid token refresh request did not fail as expected'
   exit
-fi
-JSON=$(tail -n 1 $RESPONSE_FILE) 
-echo $JSON | jq
-CODE=$(jq -r .code <<< "$JSON")
-if [ "$CODE" != 'unauthorized_request' ]; then
-   echo "*** Refresh returned an unexpected error code"
-   exit
 fi
 echo '16. POST to /refresh with incorrect CSRF token was handled correctly'
 
@@ -331,10 +322,8 @@ HTTP_STATUS=$(curl -k -i -s -X POST "$BFF_API_BASE_URL/refresh" \
 -H "x-example-csrf: $CSRF" \
 -b $MAIN_COOKIES_FILE \
 -o $RESPONSE_FILE -w '%{http_code}')
-if [ "$HTTP_STATUS" != '204' ]; then
+if [ "$HTTP_STATUS" != '200' ]; then
   echo "*** Refresh request failed with status $HTTP_STATUS"
-  JSON=$(tail -n 1 $RESPONSE_FILE) 
-  echo $JSON | jq
   exit
 fi
 echo '17. POST to /refresh with correct secure details completed successfully'
@@ -353,11 +342,11 @@ HTTP_STATUS=$(curl -k -i -s -X POST "$BFF_API_BASE_URL/refresh" \
 -o $RESPONSE_FILE -w '%{http_code}')
 if [ "$HTTP_STATUS" != '401' ]; then
   echo "*** Refresh request failed with status $HTTP_STATUS"
-  JSON=$(tail -n 1 $RESPONSE_FILE) 
-  echo $JSON | jq
   exit
 fi
 echo '18. POST to /refresh with rotated refresh token completed successfully'
+
+exit
 
 #
 # Test logging out with an invalid origin
