@@ -169,7 +169,7 @@ public class TokenHandlerResource {
         }
 
         String jsonResult = null;
-        if (!context.getCookieParameter(cookieName.ID()).isEmpty()) {
+        if (null != context.getCookieParameter(cookieName.ID()) && !context.getCookieParameter(cookieName.ID()).isEmpty()) {
             String decrytedCookie = null;
             try {
                  decrytedCookie = util.decryptCookieValue(context.getCookieParameter(cookieName.ID()));
@@ -237,7 +237,7 @@ public class TokenHandlerResource {
 
         try {
             requestValidator.validateRequest(context, new ValidateRequestOptions(true, false)); // FIXME ValidateRequestOptions
-        } catch (UnauthorizedException ex) {
+        } catch (ForbiddenException ex) {
             log.warn(ex.getMessage());
             return Response.status(ex.getStatusCode()).build();
         }
@@ -245,7 +245,7 @@ public class TokenHandlerResource {
         Response.ResponseBuilder responseBuilder = Response.ok();
         JsonObject tokenResponse = null;
 
-        if (!context.getCookieParameter(cookieName.REFRESH()).isEmpty()) {
+        if (null != context.getCookieParameter(cookieName.REFRESH()) && !context.getCookieParameter(cookieName.REFRESH()).isEmpty()) {
             authorizationClient.getCookiesForUnset(responseBuilder);
             tokenResponse = authorizationClient.refreshAccessToken(context.getCookieParameter(cookieName.REFRESH()));
             // Write the SameSite cookies
