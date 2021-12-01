@@ -71,7 +71,7 @@ public class TokenHandlerResource {
         log.info("loginStart");
 
         try {
-            requestValidator.validateRequest(context, new ValidateRequestOptions(true, false)); // FIXME ValidateRequestOptions
+            requestValidator.validateRequest(context, new ValidateRequestOptions(true, false));
         } catch (ForbiddenException ex) {
             log.warn(ex.getMessage());
             return Response.status(ex.getStatusCode()).build();
@@ -93,7 +93,7 @@ public class TokenHandlerResource {
         log.info("loginEnd");
         log.debug(body);
         try {
-            requestValidator.validateRequest(context, new ValidateRequestOptions(true, false)); // FIXME ValidateRequestOptions
+            requestValidator.validateRequest(context, new ValidateRequestOptions(true, false));
         } catch (ForbiddenException ex) {
             log.warn(ex.getMessage());
             return Response.status(ex.getStatusCode()).build();
@@ -150,7 +150,7 @@ public class TokenHandlerResource {
         JsonObject ret = new JsonObject()
                 .put("handled", isOAuthResponse)
                 .put("isLoggedIn", isLoggedIn)
-                .put("csrfToken", csrfToken);
+                .put("csrf", csrfToken);
         return responseBuilder.entity(ret).build();
     }
 
@@ -162,7 +162,7 @@ public class TokenHandlerResource {
         log.info("userInfo");
 
         try {
-            requestValidator.validateRequest(context, new ValidateRequestOptions(true, false)); // FIXME ValidateRequestOptions
+            requestValidator.validateRequest(context, new ValidateRequestOptions(true, false));
         } catch (ForbiddenException ex) {
             log.warn(ex.getMessage());
             return Response.status(ex.getStatusCode()).build();
@@ -211,7 +211,7 @@ public class TokenHandlerResource {
         log.info("logout");
 
         try {
-            requestValidator.validateRequest(context, new ValidateRequestOptions(true, false)); // FIXME ValidateRequestOptions
+            requestValidator.validateRequest(context, new ValidateRequestOptions(true, true));
         } catch (ForbiddenException ex) {
             log.warn(ex.getMessage());
             return Response.status(ex.getStatusCode()).build();
@@ -236,7 +236,7 @@ public class TokenHandlerResource {
         log.info("refresh"); // FIXME SPA does not call this yet?
 
         try {
-            requestValidator.validateRequest(context, new ValidateRequestOptions(true, false)); // FIXME ValidateRequestOptions
+            requestValidator.validateRequest(context, new ValidateRequestOptions(true, true));
         } catch (ForbiddenException ex) {
             log.warn(ex.getMessage());
             return Response.status(ex.getStatusCode()).build();
