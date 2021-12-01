@@ -6,7 +6,7 @@
 
 BFF_API_BASE_URL='https://api.example.com:9443/tokenhandler'
 WEB_BASE_URL='https://www.example.com'
-AUTHORIZATION_SERVER_BASE_URL='https://login.example.com:8443'
+AUTHORIZATION_SERVER_BASE_URL='https://localhost:8443'
 REALM_NAME=bff
 RESPONSE_FILE=data/response.txt
 LOGIN_COOKIES_FILE=data/login_cookies.txt
