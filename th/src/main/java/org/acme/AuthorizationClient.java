@@ -140,7 +140,6 @@ public class AuthorizationClient {
                 .onItem().transform(HttpResponse::bodyAsJsonObject); //.onFailure(); FIXME error handler
 
         JsonObject res = response.await().indefinitely();
-        // >>> PAR response {"request_uri":"urn:ietf:params:oauth:request_uri:d32b858e-b6a1-4fc1-9701-9ffd4ef383ab","expires_in":60}
         if (null != res.getString("error") && !res.getString("error").isEmpty()) {
             throw new ForbiddenException("Cannot authenticate to PAR endpoint");
         }
