@@ -12,6 +12,7 @@ Add new realm using `keycloak/bff-openid-code-grant-realm.json`
 
 Getting keycloak cert put it in a keystore
 ```bash
+cd th
 keytool -genkey -alias secure-server -storetype PKCS12 -keyalg RSA -keysize 2048 -keystore keystore.p12 -validity 3650 -dname "CN=DEV, OU=DEV, O=ACME, L=Brisbane, ST=QLD, C=AU" -storepass password
 -- add certs from keycloak
 openssl s_client -showcerts -connect localhost:8443 </dev/null 2>/dev/null | awk '/BEGIN CERTIFICATE/,/END CERTIFICATE/ {print $0}' > /tmp/kc.pem
