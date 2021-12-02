@@ -2,15 +2,18 @@
 
 - https://curity.io/resources/learn/the-token-handler-pattern
 
-Keycloak
+## Certificate Setup
+
+Token Handler needs a server SSL Certificate generated
 ```bash
-cd keycloak
-podman-compose up -d
+cd th/certs
+./create-certs.sh
+cp example.server.p12 ../th/src/main/resources/example.server.p12
 ```
 
-Add new realm using `keycloak/bff-openid-code-grant-realm.json`
+Load the CA `example.ca.pem` into your Web Browser trust store for demoing.
 
-Getting keycloak cert put it in a keystore
+After Keycloak has started, put its self-signed cert into a keystore:
 ```bash
 cd th
 keytool -genkey -alias secure-server -storetype PKCS12 -keyalg RSA -keysize 2048 -keystore keystore.p12 -validity 3650 -dname "CN=DEV, OU=DEV, O=ACME, L=Brisbane, ST=QLD, C=AU" -storepass password
@@ -19,6 +22,16 @@ openssl s_client -showcerts -connect localhost:8443 </dev/null 2>/dev/null | awk
 keytool -trustcacerts -keystore keystore.p12 -storepass password -importcert -alias login.example.com -file "/tmp/kc.pem"
 keytool -list -keystore keystore.p12 -storepass password -noprompt
 ```
+
+## Running Locally
+
+Keycloak
+```bash
+cd keycloak
+podman-compose up -d
+```
+
+Login to Keycloak admin web console and Add a new realm using `keycloak/bff-openid-code-grant-realm.json` file.
 
 Run the Proxy
 ```bash
@@ -43,4 +56,11 @@ Run the Token Handler
 cd th
 # we need the truststore for JARM (jwt validation)
 mvn clean quarkus:dev -Djavax.net.ssl.trustStore=keystore.p12 -Djavax.net.ssl.trustStorePassword=password
+```
+
+Run the Test suite
+```bash
+cd test
+./test-token-handler.sh
+>>> 🌈 TESTING COMPLETED OK 🌈
 ```
