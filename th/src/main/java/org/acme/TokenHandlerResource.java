@@ -85,7 +85,7 @@ public class TokenHandlerResource {
     @Produces(MediaType.APPLICATION_JSON)
     public Response loginEnd(@Context ResteasyReactiveRequestContext context, String body) {
         log.info("loginEnd");
-        log.debug(body);
+        log.info(body);
         try {
             requestValidator.validateRequest(context, new ValidateRequestOptions(true, false));
         } catch (ForbiddenException ex) {
@@ -241,8 +241,15 @@ public class TokenHandlerResource {
         if (null != context.getCookieParameter(cookieName.REFRESH()) && !context.getCookieParameter(cookieName.REFRESH()).isEmpty()) {
             authorizationClient.getCookiesForUnset(responseBuilder);
             tokenResponse = authorizationClient.refreshAccessToken(context.getCookieParameter(cookieName.REFRESH()));
+            String csrfToken = null;
+            if (null == context.getCookieParameter(cookieName.CSRF())) {
+                log.warn("No csrf cookie was supplied during refresh");
+                return Response.status(RestResponse.StatusCode.UNAUTHORIZED).build();
+            } else {
+                csrfToken = util.decryptCookieValue(context.getCookieParameter(cookieName.CSRF()));
+            }
             // Write the SameSite cookies
-            authorizationClient.getCookiesForTokenResponse(responseBuilder, tokenResponse, false, null);
+            authorizationClient.getCookiesForTokenResponse(responseBuilder, tokenResponse, false, csrfToken);
         } else {
             log.warn("No cookie was supplied during refresh");
             return Response.status(RestResponse.StatusCode.UNAUTHORIZED).build();

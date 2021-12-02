@@ -39,6 +39,12 @@ cd proxy
 mvn quarkus:dev -Ddebug=5006
 ```
 
+Build the Front End
+```bash
+cd fe/spa
+npm run build
+```
+
 Run the example Front End
 ```bash
 cd fe/webhost

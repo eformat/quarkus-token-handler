@@ -4,6 +4,7 @@ import {CallApiView} from '../callApi/callApiView';
 import {MultiTabView} from '../multiTab/multiTabView';
 import {PageLoadView} from '../pageLoad/pageLoadView';
 import {SignOutView} from '../signOut/signOutView';
+import {RefreshView} from '../refresh/refreshView';
 import {StartAuthenticationView} from '../startAuthentication/startAuthenticationView';
 import {TitleView} from '../title/titleView';
 import {UserInfoView} from '../userInfo/userInfoView';
@@ -146,6 +147,10 @@ export default function App(props: AppProps) {
 
                 <CallApiView 
                     apiClient={props.viewModel.apiClient!}
+                    onSessionExpired={setSessionExpired} />
+
+                <RefreshView 
+                    oauthClient={props.viewModel.oauthClient!}
                     onSessionExpired={setSessionExpired} />
 
                 <SignOutView 
