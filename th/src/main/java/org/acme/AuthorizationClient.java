@@ -148,57 +148,6 @@ public class AuthorizationClient {
         return new AuthorizationRequestData(codeVerifier, state, urlObject);
     }
 
-    /*
-
-        suspend fun getAuthorizationRequestObjectUri(state: String, codeVerifier: String): String
-    {
-        println("*** DEBUG")
-        println(config.redirectUri)
-        var body =
-            "client_id=${config.clientID}&state=${state}&response_mode=jwt&response_type=code&redirect_uri=${config.redirectUri}&code_challenge=${codeVerifier.hash()}&code_challenge_method=S256"
-
-        if (config.scope != null)
-        {
-            body += "&scope=${config.scope}"
-        }
-
-        try
-        {
-            val parResponse = client.post()
-                .uri(config.authorizeEndpoint + "/par")
-                .header("Content-Type", "application/x-www-form-urlencoded")
-                .bodyValue(body)
-                .awaitExchange { response -> handleAuthorizationServerResponse<PARResponse>(response, "PAR") }
-
-            return "${config.authorizeExternalEndpoint}?client_id=${config.clientID}&request_uri=${parResponse.requestUri}"
-        } catch (exception: WebClientRequestException)
-        {
-            throw AuthorizationServerException("Exception encountered when calling authorization server", exception)
-        }
-    }
-}
-
-class PARResponse(
-    @JsonProperty("request_uri") val requestUri: String,
-    @JsonProperty("expires_in") val expiresIn: Int
-)
-
-        if (re)
-            if (response.statusCode().is5xxServerError)
-            {
-                throw AuthorizationServerException("Server error response in $grant: ${response.awaitBody<String>()}")
-            }
-
-            if (response.statusCode().is4xxClientError)
-            {
-                throw UnauthorizedException("$grant request was rejected: ${response.awaitBody<String>()}")
-            }
-
-            return response.awaitBody()
-        }
-
-     */
-
     public void getCookiesForTokenResponse(Response.ResponseBuilder responseBuilder, JsonObject tokenResponse, boolean unsetLoginCookie, String csrfToken) {
         String expires = "";
         if (cookieExpiresSec > -1) {
