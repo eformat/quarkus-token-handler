@@ -4,8 +4,11 @@
 
 Keycloak
 ```bash
+cd keycloak
 podman-compose up -d
 ```
+
+Add new realm using `keycloak/bff-openid-code-grant-realm.json`
 
 Getting keycloak cert put it in a keystore
 ```bash
