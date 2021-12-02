@@ -11,15 +11,18 @@ public class AuthorizationRequestData {
     private String codeVerifier;
     @JsonProperty("state")
     private String state;
+    @JsonProperty("nonce")
+    private String nonce;
     @JsonIgnore
     private JsonObject url;
 
     public AuthorizationRequestData() {
     }
 
-    public AuthorizationRequestData(String codeVerifier, String state, JsonObject url) {
+    public AuthorizationRequestData(String codeVerifier, String state, String nonce, JsonObject url) {
         this.codeVerifier = codeVerifier;
         this.state = state;
+        this.nonce = nonce;
         this.url = url;
     }
 
@@ -39,6 +42,14 @@ public class AuthorizationRequestData {
         this.state = state;
     }
 
+    public String getNonce() {
+        return nonce;
+    }
+
+    public void setNonce(String nonce) {
+        this.nonce = nonce;
+    }
+
     public JsonObject getUrl() {
         return url;
     }
@@ -47,4 +58,13 @@ public class AuthorizationRequestData {
         this.url = url;
     }
 
+    @Override
+    public String toString() {
+        return "AuthorizationRequestData{" +
+                "codeVerifier='" + codeVerifier + '\'' +
+                ", state='" + state + '\'' +
+                ", nonce='" + nonce + '\'' +
+                ", url=" + url +
+                '}';
+    }
 }

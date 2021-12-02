@@ -115,7 +115,8 @@ public class TokenHandlerResource {
                 log.warn(ex.getMessage());
                 return Response.status(ex.getStatusCode()).build();
             }
-            log.debug(tokenResponse.encode());
+            log.debug(">>> tokenResponse: " + tokenResponse.encode());
+
             if (null == context.getCookieParameter(cookieName.CSRF())) {
                 try {
                     csrfToken = util.generateRandomString(64);
@@ -125,6 +126,7 @@ public class TokenHandlerResource {
             } else {
                 csrfToken = util.decryptCookieValue(context.getCookieParameter(cookieName.CSRF()));
             }
+
             // Write the SameSite cookies
             authorizationClient.getCookiesForTokenResponse(responseBuilder, tokenResponse, true, csrfToken);
             isLoggedIn = true;

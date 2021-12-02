@@ -2,6 +2,8 @@ package org.acme;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.smallrye.jwt.auth.principal.JWTParser;
+import io.smallrye.jwt.auth.principal.ParseException;
 import io.smallrye.mutiny.Uni;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.client.WebClientOptions;
@@ -16,6 +18,7 @@ import org.acme.exceptions.InvalidStateException;
 import org.acme.exceptions.UnauthorizedException;
 import org.apache.http.entity.ContentType;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
+import org.eclipse.microprofile.jwt.JsonWebToken;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -60,6 +63,9 @@ public class AuthorizationClient {
     @Inject
     CookieName cookieName;
 
+    @Inject
+    JWTParser parser;
+
     public JsonObject getTokens(String encryptedCookie, TokenHandlerResource.OAuthQueryParams queryParams) throws UnauthorizedException {
         if (null == encryptedCookie) {
             throw new ForbiddenException("No temporary login cookie found");
@@ -70,19 +76,35 @@ public class AuthorizationClient {
             ObjectMapper objectMapper = new ObjectMapper();
             authorizationRequestData = objectMapper.readValue(decryptedCookie, AuthorizationRequestData.class);
         } catch (JsonProcessingException e) {
-            e.printStackTrace(); // FIXME
+            throw new UnauthorizedException("Object failed to parse");
         }
         if (!authorizationRequestData.getState().equals(queryParams.state())) {
-            throw new InvalidStateException("Login cookie is invalid");
+            throw new InvalidStateException("Login cookie has invalid state");
         }
-        Uni<JsonObject> response = exchangeCodeForTokens(queryParams.code(), authorizationRequestData.getCodeVerifier());
-        return response.await().indefinitely();
+
+        Uni<JsonObject> uni = exchangeCodeForTokens(queryParams.code(), authorizationRequestData.getCodeVerifier(), authorizationRequestData.getNonce());
+        JsonObject response = uni.await().indefinitely();
+        if (response.getString("id_token") != null && !response.getString("id_token").isEmpty()) {
+            JsonWebToken jwt = null;
+            try {
+                // validated against auth server
+                jwt = parser.parse(response.getString("id_token"));
+            } catch (ParseException e) {
+                throw new UnauthorizedException("ID Token failed to parse");
+            }
+            if (!authorizationRequestData.getNonce().equals(jwt.getClaim("nonce"))) {
+                throw new UnauthorizedException("Auth server did not return expected nonce");
+            }
+        }
+
+        return response;
     }
 
-    public Uni<JsonObject> exchangeCodeForTokens(String code, String codeVerifier) {
+    public Uni<JsonObject> exchangeCodeForTokens(String code, String codeVerifier, String nonce) {
         MultiMap form = MultiMap.caseInsensitiveMultiMap();
         form.add("grant_type", "authorization_code"); // OAuth 2.0 Authorization Code Grant https://www.rfc-editor.org/rfc/rfc6749.html#section-4.1
         form.add("code", code); // Auth code
+        form.add("nonce", nonce); // we should check this ourselves
         form.add("redirect_uri", redirectUri);
         form.add("client_id", clientId);
         form.add("client_secret", clientSecret); // Client Credentials (cannot be accessed using Client Credentials Grant, as service account disabled in auth server)
@@ -116,15 +138,18 @@ public class AuthorizationClient {
         MultiMap form = MultiMap.caseInsensitiveMultiMap();
         String state = null;
         String codeVerifier = null;
+        String nonce = null;
         try {
             state = util.generateRandomString(64);
             codeVerifier = util.generateRandomString(64);
+            nonce = util.generateRandomString(64);
         } catch (NoSuchAlgorithmException e) {
             throw new InvalidStateException("Crypto failed to generate");
         }
         form.add("client_id", clientId);
         form.add("client_secret", clientSecret);
         form.add("state", state); // we should check this ourselves
+        form.add("nonce", nonce); // we should check this ourselves
         form.add("response_mode", "jwt"); // see .well-known/openid-configuration [response_modes_supported] (JARM)
         form.add("response_type", "code"); // OAuth 2.0 Authorization Code Grant https://www.rfc-editor.org/rfc/rfc6749.html#section-4.1
         form.add("scope", "openid"); // we will get an ID token using openid scope when we exchange
@@ -145,7 +170,7 @@ public class AuthorizationClient {
         }
 
         JsonObject urlObject = new JsonObject().put("authorizationRequestUrl", authServer + "/auth/realms/" + realm + "/protocol/openid-connect/auth?client_id=" + clientId + "&request_uri=" + res.getString("request_uri"));
-        return new AuthorizationRequestData(codeVerifier, state, urlObject);
+        return new AuthorizationRequestData(codeVerifier, state, nonce, urlObject);
     }
 
     public void getCookiesForTokenResponse(Response.ResponseBuilder responseBuilder, JsonObject tokenResponse, boolean unsetLoginCookie, String csrfToken) {

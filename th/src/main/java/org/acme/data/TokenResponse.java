@@ -110,4 +110,19 @@ public class TokenResponse {
     public void setScope(String scope) {
         this.scope = scope;
     }
+
+    @Override
+    public String toString() {
+        return "TokenResponse{" +
+                "accessToken='" + accessToken + '\'' +
+                ", refreshToken='" + refreshToken + '\'' +
+                ", idToken='" + idToken + '\'' +
+                ", expiresIn=" + expiresIn +
+                ", refreshExpiresIn=" + refreshExpiresIn +
+                ", tokenType='" + tokenType + '\'' +
+                ", notBeforePolicy=" + notBeforePolicy +
+                ", sessionState='" + sessionState + '\'' +
+                ", scope='" + scope + '\'' +
+                '}';
+    }
 }

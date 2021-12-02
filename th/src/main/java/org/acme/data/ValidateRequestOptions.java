@@ -11,4 +11,12 @@ public class ValidateRequestOptions {
         this.requireTrustedOrigin = requireTrustedOrigin;
         this.requireCsrfHeader = requireCsrfHeader;
     }
+
+    @Override
+    public String toString() {
+        return "ValidateRequestOptions{" +
+                "requireTrustedOrigin=" + requireTrustedOrigin +
+                ", requireCsrfHeader=" + requireCsrfHeader +
+                '}';
+    }
 }
