@@ -113,27 +113,92 @@ public class AuthorizationClient {
     }
 
     public AuthorizationRequestData getAuthRequestData() {
-        StringBuilder url = new StringBuilder();
+        MultiMap form = MultiMap.caseInsensitiveMultiMap();
         String state = null;
         String codeVerifier = null;
         try {
             state = util.generateRandomString(64);
             codeVerifier = util.generateRandomString(64);
         } catch (NoSuchAlgorithmException e) {
-            e.printStackTrace(); // FIXME Exception Handling
+            throw new InvalidStateException("Crypto failed to generate");
         }
-        url.append(authServer + "/auth/realms/" + realm + "/protocol/openid-connect/auth?");
-        url.append("client_id=" + clientId);
-        url.append("&state=" + state); // we should check this ourselves
-        url.append("&response_mode=jwt"); // see .well-known/openid-configuration [response_modes_supported] (JARM)
-        url.append("&response_type=code"); // OAuth 2.0 Authorization Code Grant https://www.rfc-editor.org/rfc/rfc6749.html#section-4.1
-        url.append("&scope=openid"); // we will get an ID token using openid scope when we exchange
-        url.append("&code_challenge=" + util.getCodeChallenge(codeVerifier)); // PKCE
-        url.append("&code_challenge_method=S256"); // PCKE method
-        url.append("&redirect_uri=" + redirectUri); // we set this so must match realm settings
-        JsonObject urlObject = new JsonObject().put("authorizationRequestUrl", url.toString());
+        form.add("client_id", clientId);
+        form.add("client_secret", clientSecret);
+        form.add("state", state); // we should check this ourselves
+        form.add("response_mode", "jwt"); // see .well-known/openid-configuration [response_modes_supported] (JARM)
+        form.add("response_type", "code"); // OAuth 2.0 Authorization Code Grant https://www.rfc-editor.org/rfc/rfc6749.html#section-4.1
+        form.add("scope", "openid"); // we will get an ID token using openid scope when we exchange
+        form.add("code_challenge", util.getCodeChallenge(codeVerifier)); // PKCE
+        form.add("code_challenge_method", "S256"); // PCKE method
+        form.add("redirect_uri", redirectUri); // we set this so must match realm settings
+        // OAuth 2.0 Pushed Authorization Requests
+        WebClientOptions options = new WebClientOptions().setKeepAlive(true).setSsl(true).setVerifyHost(false).setTrustAll(true); // FIXME Trust CA
+        Uni<JsonObject> response = WebClient.create(vertx, options)
+                .postAbs(authServer + "/auth/realms/" + realm + "/protocol/openid-connect/ext/par/request")
+                .putHeader("Content-Type", ContentType.APPLICATION_FORM_URLENCODED.toString())
+                .sendForm(form)
+                .onItem().transform(HttpResponse::bodyAsJsonObject); //.onFailure(); FIXME error handler
+
+        JsonObject res = response.await().indefinitely();
+        // >>> PAR response {"request_uri":"urn:ietf:params:oauth:request_uri:d32b858e-b6a1-4fc1-9701-9ffd4ef383ab","expires_in":60}
+        if (null != res.getString("error") && !res.getString("error").isEmpty()) {
+            throw new ForbiddenException("Cannot authenticate to PAR endpoint");
+        }
+
+        JsonObject urlObject = new JsonObject().put("authorizationRequestUrl", authServer + "/auth/realms/" + realm + "/protocol/openid-connect/auth?client_id=" + clientId + "&request_uri=" + res.getString("request_uri"));
         return new AuthorizationRequestData(codeVerifier, state, urlObject);
     }
+
+    /*
+
+        suspend fun getAuthorizationRequestObjectUri(state: String, codeVerifier: String): String
+    {
+        println("*** DEBUG")
+        println(config.redirectUri)
+        var body =
+            "client_id=${config.clientID}&state=${state}&response_mode=jwt&response_type=code&redirect_uri=${config.redirectUri}&code_challenge=${codeVerifier.hash()}&code_challenge_method=S256"
+
+        if (config.scope != null)
+        {
+            body += "&scope=${config.scope}"
+        }
+
+        try
+        {
+            val parResponse = client.post()
+                .uri(config.authorizeEndpoint + "/par")
+                .header("Content-Type", "application/x-www-form-urlencoded")
+                .bodyValue(body)
+                .awaitExchange { response -> handleAuthorizationServerResponse<PARResponse>(response, "PAR") }
+
+            return "${config.authorizeExternalEndpoint}?client_id=${config.clientID}&request_uri=${parResponse.requestUri}"
+        } catch (exception: WebClientRequestException)
+        {
+            throw AuthorizationServerException("Exception encountered when calling authorization server", exception)
+        }
+    }
+}
+
+class PARResponse(
+    @JsonProperty("request_uri") val requestUri: String,
+    @JsonProperty("expires_in") val expiresIn: Int
+)
+
+        if (re)
+            if (response.statusCode().is5xxServerError)
+            {
+                throw AuthorizationServerException("Server error response in $grant: ${response.awaitBody<String>()}")
+            }
+
+            if (response.statusCode().is4xxClientError)
+            {
+                throw UnauthorizedException("$grant request was rejected: ${response.awaitBody<String>()}")
+            }
+
+            return response.awaitBody()
+        }
+
+     */
 
     public void getCookiesForTokenResponse(Response.ResponseBuilder responseBuilder, JsonObject tokenResponse, boolean unsetLoginCookie, String csrfToken) {
         String expires = "";

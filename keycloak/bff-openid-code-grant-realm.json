@@ -64,7 +64,12 @@
       "serviceAccountsEnabled": false,
       "publicClient": false,
       "frontchannelLogout": false,
-      "protocol": "openid-connect"
+      "protocol": "openid-connect",
+      "attributes": {
+        "use.refresh.tokens": "true",
+        "require.pushed.authorization.requests": "true",
+        "pkce.code.challenge.method": "S256"
+      }
     }
   ],
   "browserFlow": "browser",
@@ -74,17 +79,8 @@
   "clientAuthenticationFlow": "clients",
   "dockerAuthenticationFlow": "docker auth",
   "attributes": {
-    "cibaBackchannelTokenDeliveryMode": "poll",
-    "cibaExpiresIn": "120",
-    "cibaAuthRequestedUserHint": "login_hint",
-    "oauth2DeviceCodeLifespan": "600",
-    "clientOfflineSessionMaxLifespan": "0",
-    "oauth2DevicePollingInterval": "5",
-    "clientSessionIdleTimeout": "0",
-    "clientSessionMaxLifespan": "0",
-    "parRequestUriLifespan": "60",
-    "clientOfflineSessionIdleTimeout": "0",
-    "cibaInterval": "5"
+    "require.pushed.authorization.requests": "true",
+    "pkce.code.challenge.method": "S256"
   },
   "keycloakVersion": "15.0.0",
   "userManagedAccessAllowed": false,
