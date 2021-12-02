@@ -14,7 +14,6 @@ import org.acme.exceptions.InvalidStateException;
 import org.acme.exceptions.UnauthorizedException;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.utils.URLEncodedUtils;
-import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.jwt.JsonWebToken;
 import org.jboss.resteasy.reactive.RestResponse;
 import org.jboss.resteasy.reactive.server.core.ResteasyReactiveRequestContext;
@@ -54,12 +53,6 @@ public class TokenHandlerResource {
 
     @Inject
     JWTParser parser;
-
-    @ConfigProperty(name = "clientId")
-    String clientId;
-
-    @ConfigProperty(name = "authServer")
-    String authServer;
 
     record OAuthQueryParams(String code, String state) {
     }
@@ -280,7 +273,7 @@ public class TokenHandlerResource {
             return new OAuthQueryParams(null, null);
         }
 
-        // against kc
+        // validated against auth server
         JsonWebToken jwt = parser.parse(response);
 
         return new OAuthQueryParams(jwt.getClaim("code"), jwt.getClaim("state"));
