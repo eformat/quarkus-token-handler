@@ -51,7 +51,7 @@
       "clientAuthenticatorType": "client-jwt",
       "secret": "1cd70bdf-db5b-4346-83da-babe16dae1d8",
       "redirectUris": [
-        "https://www.example.com/*"
+        "https://www.example.com/"
       ],
       "webOrigins": [
          "https://www.example.com/"
@@ -69,7 +69,9 @@
         "require.pushed.authorization.requests": "true",
         "token.endpoint.auth.signing.alg": "PS256",
         "pkce.code.challenge.method": "S256",
-        "use.refresh.tokens": "true"
+        "use.refresh.tokens": "true",
+        "use.jwks.url": "true",
+        "jwks.url": "http://192.168.86.109:7080/tokenhandler/jwk"
       }
     }
   ],
@@ -198,7 +200,10 @@
             "configuration": {}
           }
         ],
-        "profiles": [
+          "profiles": [
+              "fapi-1-baseline",
+              "bff-fapi-1-advanced"
+              
         ]
       }
     ]
