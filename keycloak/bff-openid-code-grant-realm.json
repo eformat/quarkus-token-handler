@@ -1,6 +1,6 @@
 {
   "realm": "bff",
-  "defaultSignatureAlgorithm": "RS256",
+  "defaultSignatureAlgorithm": "PS256",
   "revokeRefreshToken": false,
   "refreshTokenMaxReuse": 0,
   "accessTokenLifespan": 300,
@@ -48,7 +48,7 @@
     {
       "clientId": "bff_client",
       "enabled": true,
-      "clientAuthenticatorType": "client-secret",
+      "clientAuthenticatorType": "client-jwt",
       "secret": "1cd70bdf-db5b-4346-83da-babe16dae1d8",
       "redirectUris": [
         "https://www.example.com/*"
@@ -66,9 +66,10 @@
       "frontchannelLogout": false,
       "protocol": "openid-connect",
       "attributes": {
-        "use.refresh.tokens": "true",
         "require.pushed.authorization.requests": "true",
-        "pkce.code.challenge.method": "S256"
+        "token.endpoint.auth.signing.alg": "PS256",
+        "pkce.code.challenge.method": "S256",
+        "use.refresh.tokens": "true"
       }
     }
   ],
@@ -85,10 +86,122 @@
   "keycloakVersion": "15.0.0",
   "userManagedAccessAllowed": false,
   "clientProfiles": {
-    "profiles": []
-  },
+    "profiles": [
+      {
+        "name": "bff-fapi-1-baseline",
+        "executors": [
+          {
+            "executor": "secure-session",
+            "configuration": {}
+          },
+          {
+            "executor": "pkce-enforcer",
+            "configuration": {
+              "auto-configure": true
+            }
+          },
+          {
+            "executor": "secure-client-authenticator",
+            "configuration": {
+              "allowed-client-authenticators": [
+                "client-secret",
+                "client-jwt",
+                "client-x509"
+              ],
+              "default-client-authenticator": "client-jwt"
+            }
+          },
+          {
+            "executor": "secure-client-uris",
+            "configuration": {}
+          },
+          {
+            "executor": "consent-required",
+            "configuration": {}
+          },
+          {
+            "executor": "full-scope-disabled",
+            "configuration": {
+              "auto-configure": true
+            }
+          }
+        ]
+      },
+      {
+        "name": "bff-fapi-1-advanced",
+        "executors": [
+          {
+            "executor": "secure-session",
+            "configuration": {}
+          },
+          {
+            "executor": "confidential-client",
+            "configuration": {}
+          },
+          {
+            "executor": "secure-client-authenticator",
+            "configuration": {
+              "allowed-client-authenticators": [
+                "client-jwt",
+                "client-secret",
+                "client-x509",
+                "client-secret-jwt"
+              ],
+              "default-client-authenticator": "client-jwt"
+            }
+          },
+          {
+            "executor": "secure-client-uris",
+            "configuration": {}
+          },
+          {
+            "executor": "secure-response-type",
+            "configuration": {
+              "auto-configure": true,
+              "allow-token-response-type": false
+            }
+          },
+          {
+            "executor": "secure-signature-algorithm",
+            "configuration": {
+              "default-algorithm": "PS256"
+            }
+          },
+          {
+            "executor": "secure-signature-algorithm-signed-jwt",
+            "configuration": {
+              "require-client-assertion": false
+            }
+          },
+          {
+            "executor": "consent-required",
+            "configuration": {}
+          },
+          {
+            "executor": "full-scope-disabled",
+            "configuration": {
+              "auto-configure": true
+            }
+          }
+        ]
+      }
+    ]
+  },    
   "clientPolicies": {
-    "policies": []
+    "policies": [
+      {
+        "name": "fapi",
+        "enabled": true,
+        "conditions": [
+          {
+            "condition": "any-client",
+            "configuration": {}
+          }
+        ],
+        "profiles": [
+        ]
+      }
+    ]
   },
   "users" : [
       {
