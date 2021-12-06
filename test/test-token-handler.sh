@@ -10,7 +10,7 @@ AUTHORIZATION_SERVER_BASE_URL='https://login.example.com:443'
 RESPONSE_FILE=data/response.txt
 MAIN_COOKIES_FILE=data/main_cookies.txt
 LOGIN_COOKIES_FILE=data/login_cookies.txt
-CURITY_COOKIES_FILE=data/curity_cookies.txt
+KC_COOKIES_FILE=data/kc_cookies.txt
 #export https_proxy='http://127.0.0.1:8888'
 
 #
@@ -418,7 +418,7 @@ echo '23. Testing following the end session redirect redirect ...'
 JSON=$(tail -n 1 $RESPONSE_FILE)
 END_SESSION_REQUEST_URL=$(jq -r .url <<< "$JSON")
 HTTP_STATUS=$(curl -k -i -s -X GET $END_SESSION_REQUEST_URL \
--c $CURITY_COOKIES_FILE \
+-c $KC_COOKIES_FILE \
 -o $RESPONSE_FILE -w '%{http_code}')
 if [ $HTTP_STATUS != '200' ]; then
   echo "*** Problem encountered during an OpenID Connect end session redirect, status: $HTTP_STATUS"

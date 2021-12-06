@@ -2,10 +2,14 @@ version: '3'
 services:
 
   keycloak:
-    image: quay.io/keycloak/keycloak:15.0.0
+    image: quay.io/keycloak/keycloak:15.0.2
     ports:
       - "8443:8443"
+      - "8787:8787"
     environment:
       DB_VENDOR: h2
       KEYCLOAK_USER: admin
       KEYCLOAK_PASSWORD: admin
+      #KEYCLOAK_LOGLEVEL: DEBUG
+      DEBUG: 'true'
+      DEBUG_PORT: '*:8787'

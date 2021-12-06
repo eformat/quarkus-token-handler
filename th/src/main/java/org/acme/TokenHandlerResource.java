@@ -25,14 +25,20 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
+import java.security.GeneralSecurityException;
 import java.security.NoSuchAlgorithmException;
 import java.util.Base64;
 import java.util.HashMap;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Path("/tokenhandler")
 public class TokenHandlerResource {
@@ -297,6 +303,17 @@ public class TokenHandlerResource {
             e.printStackTrace(); // FIXME
         }
         return cookieValue;
+    }
+
+    @GET
+    @Produces(MediaType.APPLICATION_JSON)
+    @Path("jwk")
+    public String getPublicJwk() throws ParseException, GeneralSecurityException, IOException {
+        InputStream is = getClass().getClassLoader().getResourceAsStream("public-jwk.key");
+        String publicKey = new BufferedReader(
+                new InputStreamReader(is, StandardCharsets.UTF_8)).lines()
+                .collect(Collectors.joining("\n"));
+        return publicKey;
     }
 
 }

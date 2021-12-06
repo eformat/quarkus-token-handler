@@ -1,9 +1,9 @@
 package org.acme;
 
+import io.smallrye.jwt.algorithm.SignatureAlgorithm;
+import io.smallrye.jwt.build.Jwt;
 import org.acme.exceptions.ForbiddenException;
-import org.acme.exceptions.UnauthorizedException;
 import org.eclipse.microprofile.config.ConfigProvider;
-import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -17,6 +17,7 @@ import java.nio.charset.StandardCharsets;
 import java.security.*;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.KeySpec;
+import java.time.ZonedDateTime;
 import java.util.Base64;
 
 @ApplicationScoped
@@ -25,6 +26,7 @@ public class Util {
     static String salt = ConfigProvider.getConfig().getValue("salt", String.class);
     static String encKey = ConfigProvider.getConfig().getValue("encKey", String.class);
     static String ivKey = ConfigProvider.getConfig().getValue("ivKey", String.class);
+    //static String kid = ConfigProvider.getConfig().getValue("smallrye.jwt.token.kid", String.class);
 
     private static final Logger log = LoggerFactory.getLogger(Util.class);
 
@@ -133,6 +135,27 @@ public class Util {
             throw new ForbiddenException("Cookie decryption failed");
         }
         return plainText;
+    }
+
+    public String generateJwtAssertion() {
+        String token = null;
+        try {
+            token = Jwt.issuer("bff_client")
+                    .subject("bff_client")
+                    .issuedAt(ZonedDateTime.now().toEpochSecond())
+                    .expiresIn(10) // keep this short, allow for clock skew
+                    .audience("https://localhost:8443/auth/realms/bff")
+                    .claim("jti", generateRandomString(32)) // stop replay attacks
+                    //.jws().keyId(kid)
+                    .jws()
+                    .algorithm(SignatureAlgorithm.PS256) // must match mp.jwt.verify.publickey.algorithm
+                    .sign();
+        } catch (NoSuchAlgorithmException e) {
+            log.warn(e.getMessage());
+            throw new ForbiddenException("Signed jwt failed");
+        }
+        log.debug(">> jwt assertion: " + token);
+        return token;
     }
 
 }

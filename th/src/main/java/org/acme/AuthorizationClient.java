@@ -95,6 +95,8 @@ public class AuthorizationClient {
             if (!authorizationRequestData.getNonce().equals(jwt.getClaim("nonce"))) {
                 throw new UnauthorizedException("Auth server did not return expected nonce");
             }
+        } else {
+            log.warn("No id token found " + response.encode());
         }
 
         return response;
@@ -108,6 +110,8 @@ public class AuthorizationClient {
         form.add("redirect_uri", redirectUri);
         form.add("client_id", clientId);
         form.add("client_secret", clientSecret); // Client Credentials (cannot be accessed using Client Credentials Grant, as service account disabled in auth server)
+        form.add("client_assertion_type", "urn:ietf:params:oauth:client-assertion-type:jwt-bearer"); // signed jwt client
+        form.add("client_assertion", util.generateJwtAssertion());
         form.add("code_verifier", codeVerifier); // PKCE
         WebClientOptions options = new WebClientOptions().setKeepAlive(true).setSsl(true).setVerifyHost(false).setTrustAll(true); // FIXME Trust CA
         return WebClient.create(vertx, options)
@@ -124,6 +128,8 @@ public class AuthorizationClient {
         form.add("grant_type", "refresh_token");
         form.add("client_id", clientId);
         form.add("client_secret", clientSecret);
+        form.add("client_assertion_type", "urn:ietf:params:oauth:client-assertion-type:jwt-bearer"); // signed jwt client
+        form.add("client_assertion", util.generateJwtAssertion());
         form.add("refresh_token", decryptedCookie);
         WebClientOptions options = new WebClientOptions().setKeepAlive(true).setSsl(true).setVerifyHost(false).setTrustAll(true); // FIXME Trust CA
         Uni<JsonObject> response = WebClient.create(vertx, options)
@@ -148,6 +154,8 @@ public class AuthorizationClient {
         }
         form.add("client_id", clientId);
         form.add("client_secret", clientSecret);
+        form.add("client_assertion_type", "urn:ietf:params:oauth:client-assertion-type:jwt-bearer"); // signed jwt client
+        form.add("client_assertion", util.generateJwtAssertion());
         form.add("state", state); // we should check this ourselves
         form.add("nonce", nonce); // we should check this ourselves
         form.add("response_mode", "jwt"); // see .well-known/openid-configuration [response_modes_supported] (JARM)
@@ -166,6 +174,7 @@ public class AuthorizationClient {
 
         JsonObject res = response.await().indefinitely();
         if (null != res.getString("error") && !res.getString("error").isEmpty()) {
+            log.warn("pushed auth login failed " + res.encode());
             throw new ForbiddenException("Cannot authenticate to PAR endpoint");
         }
 
@@ -220,6 +229,8 @@ public class AuthorizationClient {
         form.add("redirect_uri", redirectUri);
         form.add("client_id", clientId);
         form.add("client_secret", clientSecret);
+        form.add("client_assertion_type", "urn:ietf:params:oauth:client-assertion-type:jwt-bearer"); // signed jwt client
+        form.add("client_assertion", util.generateJwtAssertion());
         form.add("refresh_token", decryptedCookie);
         WebClientOptions options = new WebClientOptions().setKeepAlive(true).setSsl(true).setVerifyHost(false).setTrustAll(true); // FIXME Trust CA
         WebClient.create(vertx, options)

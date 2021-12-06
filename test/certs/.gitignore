@@ -1,0 +1,8 @@
+*.key
+*.p12
+*.pem
+*.srl
+node_modules/
+jwks*
+package-lock.json
+jwt.txt
