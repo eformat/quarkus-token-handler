@@ -2,13 +2,28 @@
 
 - https://curity.io/resources/learn/the-token-handler-pattern
 
+![images/token-handler.png](images/token-handler.png)
+
+SPA (single page apps) use access tokens that grant access to backend resources. SPA's are run in an insecure environment (the user's browser) and can be served off of CDN hosting. The risk of Token attacks is high e.g. XSS from malicious javascript code stealing tokens.
+
+Modern browsers offer ways to secure cookies and limit their usage to secure HTTPS traffic only (thus inaccessible to scripts or insecure traffic). By setting `SameSite=strict` we can limit requests from only the originating domain. CORS headers are set to further limit CSRF attacks. Content Security Policy headers are set to block malicious code from sending requests outside the app.
+
+The only way to protect tokens from being accessed by any malicious code is to keep them away from the browser. Tokens are encrypted and stored on the client using `SameSite, HttpOnly, Secure` cookies. This is stateless from a backend perspective (cookies are not stored on the server side). The `Token Handler Pattern` is a back-end-for-frontend approach. All communication from the front end goes through the token handler. The token handler is made up of two apps. The handler itself communicates to the identity service (Keycloak) using signed client secrets (JARM) and Pushed Authentication requests (PAR). These include PKCE and other best in breed Oauth2.0 standards. The business api call is proxied through to the application, converting the cookie to a bearer token which is checked against the JWK auth endpoint.
+
+In this example the Keycloak client (`bff_client`) is conformant to security standards and profiles set at the realm level - i.e. Financial-grade API baseline and advanced `Policy` is met (with one exception - we disable holder-of-key enforcer i.e mtls clients - WIP).
+
 ## Certificate Setup
 
 Token Handler needs a server SSL Certificate generated
 ```bash
 cd th/certs
 ./create-certs.sh
-cp example.server.p12 ../th/src/main/resources/example.server.p12
+cp example.server.p12 ../../th/src/main/resources/example.server.p12
+cp example.client.p12 ../../th/
+cp example.ca.pem ../../keycloak/
+cp example.server.pem ../../proxy/src/main/resources/
+cp example.server.key ../../proxy/src/main/resources/
+cp example.server.p12 ../../fe/webhost/
 ```
 
 Load the CA `example.ca.pem` into your Web Browser trust store for demoing.
