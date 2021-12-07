@@ -21,7 +21,7 @@ In this example the Keycloak client (`bff_client`) is conformant to security sta
 
 ## Certificate Setup
 
-Token Handler needs a server SSL Certificate generated
+Token Handler and Proxy needs SSL Certificates generated
 ```bash
 cd test/certs
 ./create-certs.sh
@@ -35,7 +35,7 @@ cp example.server.p12 ../../fe/webhost/
 
 Load the CA `example.ca.pem` into your Web Browser trust store for demoing.
 
-Generate certs, libraries and a signed JWT for the bff-client
+Generate bff-client JWT certs
 ```bash
 cd test/certs
 go get github.com/lestrrat-go/jwx/cmd/jwx
