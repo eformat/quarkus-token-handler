@@ -1,6 +1,11 @@
-# quarkus-token-handler
+# 🔐 quarkus-token-handler 🔐
+
+SPA using Keycloak, OIDC, OAuth2, FAPI, Encrypted Cookies.
 
 - https://curity.io/resources/learn/the-token-handler-pattern
+- https://www.pingidentity.com/en/company/blog/posts/2021/refresh-token-rotation-spa.html
+
+An re-implementation using Quarkus and Keycloak based on the the fantastic curity.io examples. 👏👏
 
 ![images/token-handler.png](images/token-handler.png)
 
@@ -8,9 +13,11 @@ SPA (single page apps) use access tokens that grant access to backend resources.
 
 Modern browsers offer ways to secure cookies and limit their usage to secure HTTPS traffic only (thus inaccessible to scripts or insecure traffic). By setting `SameSite=strict` we can limit requests from only the originating domain. CORS headers are set to further limit CSRF attacks. Content Security Policy headers are set to block malicious code from sending requests outside the app.
 
-The only way to protect tokens from being accessed by any malicious code is to keep them away from the browser. Tokens are encrypted and stored on the client using `SameSite, HttpOnly, Secure` cookies. This is stateless from a backend perspective (cookies are not stored on the server side). The `Token Handler Pattern` is a back-end-for-frontend approach. All communication from the front end goes through the token handler. The token handler is made up of two apps. The handler itself communicates to the identity service (Keycloak) using signed client secrets (JARM) and Pushed Authentication requests (PAR). These include PKCE and other best in breed Oauth2.0 standards. The business api call is proxied through to the application, converting the cookie to a bearer token which is checked against the JWK auth endpoint.
+The only way to protect tokens from being accessed by any malicious code is to keep them away from the browser. Tokens are encrypted and stored on the client using `SameSite, HttpOnly, Secure` cookies. This is stateless from a backend perspective (cookies are not stored on the server side). The `Token Handler Pattern` is a back-end-for-frontend approach. All communication from the front end goes through the token handler. The token handler is made up of two apps. The handler itself communicates to the identity service (Keycloak) using signed client secrets (JARM) and Pushed Authentication requests (PAR). These include PKCE and other best in breed Oauth2.0 practices. The business api call is proxied through to the backend application, converting the cookie to a bearer token which is checked against the JWK auth endpoint.
 
-In this example the Keycloak client (`bff_client`) is conformant to security standards and profiles set at the realm level - i.e. Financial-grade API baseline and advanced `Policy` is met (with one exception - we disable holder-of-key enforcer i.e mtls clients - WIP).
+In this example the Keycloak client (`bff_client`) is conformant to security standards and profiles set at the realm level - i.e. Financial-grade API baseline and advanced `Policy` is met (with one exception - we disable holder-of-key enforcer i.e mTLS clients - which is a WIP).
+
+![images/fe.png](images/fe.png)
 
 ## Certificate Setup
 
