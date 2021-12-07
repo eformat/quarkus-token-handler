@@ -25,7 +25,7 @@ Token Handler and Proxy needs SSL Certificates generated
 ```bash
 cd test/certs
 ./create-certs.sh
-cp example.server.p12 ../../th/src/main/resources/example.server.p12
+cp example.server.p12 ../../th/src/main/resources/
 cp example.client.p12 ../../th/
 cp example.ca.pem ../../keycloak/
 cp example.server.pem ../../proxy/src/main/resources/
