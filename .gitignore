@@ -42,3 +42,4 @@ Chart.lock
 allure-results
 ajcore.*
 node_modules
+*.pem
