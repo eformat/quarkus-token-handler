@@ -23,7 +23,7 @@ In this example the Keycloak client (`bff_client`) is conformant to security sta
 
 Token Handler needs a server SSL Certificate generated
 ```bash
-cd th/certs
+cd test/certs
 ./create-certs.sh
 cp example.server.p12 ../../th/src/main/resources/example.server.p12
 cp example.client.p12 ../../th/
@@ -38,8 +38,12 @@ Load the CA `example.ca.pem` into your Web Browser trust store for demoing.
 Generate certs, libraries and a signed JWT for the bff-client
 ```bash
 cd test/certs
-./create-jwt.sh
-cp bff-client-pkcs8.key ../../th/src/main/resources/
+go get github.com/lestrrat-go/jwx/cmd/jwx
+jwx jwk generate --type RSA --keysize 2048 --template '{"alg":"PS256","use":"sig"}' > private.key
+jwx jwk format --public-key private.key > public.key
+cp private.key ../../th/src/main/resources/
+echo '{"keys":['`cat public.key`']}'| jq . > public-jwk.key
+cp public.key ../../th/src/main/resources/
 ```
 
 After Keycloak has started, put its self-signed cert into a keystore:
