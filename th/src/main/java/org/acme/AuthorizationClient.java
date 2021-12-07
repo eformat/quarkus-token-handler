@@ -6,6 +6,7 @@ import io.smallrye.jwt.auth.principal.JWTParser;
 import io.smallrye.jwt.auth.principal.ParseException;
 import io.smallrye.mutiny.Uni;
 import io.vertx.core.json.JsonObject;
+import io.vertx.core.net.PfxOptions;
 import io.vertx.ext.web.client.WebClientOptions;
 import io.vertx.mutiny.core.MultiMap;
 import io.vertx.mutiny.core.Vertx;
@@ -113,7 +114,19 @@ public class AuthorizationClient {
         form.add("client_assertion_type", "urn:ietf:params:oauth:client-assertion-type:jwt-bearer"); // signed jwt client
         form.add("client_assertion", util.generateJwtAssertion());
         form.add("code_verifier", codeVerifier); // PKCE
-        WebClientOptions options = new WebClientOptions().setKeepAlive(true).setSsl(true).setVerifyHost(false).setTrustAll(true); // FIXME Trust CA
+        WebClientOptions options = new WebClientOptions()
+                .setKeepAlive(true)
+                .setSsl(true)
+                .setPfxKeyCertOptions(
+                        new PfxOptions()
+                                .setPath("example.server.p12")
+                                .setPassword("password")
+                )
+                .setPfxTrustOptions(
+                        new PfxOptions()
+                                .setPath("keystore.p12")
+                                .setPassword("password")
+                );
         return WebClient.create(vertx, options)
                 .postAbs(authServer + "/auth/realms/" + realm + "/protocol/openid-connect/token")
                 .putHeader("Content-Type", ContentType.APPLICATION_FORM_URLENCODED.toString())
@@ -131,7 +144,19 @@ public class AuthorizationClient {
         form.add("client_assertion_type", "urn:ietf:params:oauth:client-assertion-type:jwt-bearer"); // signed jwt client
         form.add("client_assertion", util.generateJwtAssertion());
         form.add("refresh_token", decryptedCookie);
-        WebClientOptions options = new WebClientOptions().setKeepAlive(true).setSsl(true).setVerifyHost(false).setTrustAll(true); // FIXME Trust CA
+        WebClientOptions options = new WebClientOptions()
+                .setKeepAlive(true)
+                .setSsl(true)
+                .setPfxKeyCertOptions(
+                        new PfxOptions()
+                                .setPath("example.client.p12")
+                                .setPassword("password")
+                )
+                .setPfxTrustOptions(
+                        new PfxOptions()
+                                .setPath("keystore.p12")
+                                .setPassword("password")
+                );
         Uni<JsonObject> response = WebClient.create(vertx, options)
                 .postAbs(authServer + "/auth/realms/" + realm + "/protocol/openid-connect/token")
                 .putHeader("Content-Type", ContentType.APPLICATION_FORM_URLENCODED.toString())
@@ -165,7 +190,19 @@ public class AuthorizationClient {
         form.add("code_challenge_method", "S256"); // PCKE method
         form.add("redirect_uri", redirectUri); // we set this so must match realm settings
         // OAuth 2.0 Pushed Authorization Requests
-        WebClientOptions options = new WebClientOptions().setKeepAlive(true).setSsl(true).setVerifyHost(false).setTrustAll(true); // FIXME Trust CA
+        WebClientOptions options = new WebClientOptions()
+                .setKeepAlive(true)
+                .setSsl(true)
+                .setPfxKeyCertOptions(
+                        new PfxOptions()
+                                .setPath("example.client.p12")
+                                .setPassword("password")
+                )
+                .setPfxTrustOptions(
+                        new PfxOptions()
+                                .setPath("keystore.p12")
+                                .setPassword("password")
+                );
         Uni<JsonObject> response = WebClient.create(vertx, options)
                 .postAbs(authServer + "/auth/realms/" + realm + "/protocol/openid-connect/ext/par/request")
                 .putHeader("Content-Type", ContentType.APPLICATION_FORM_URLENCODED.toString())
@@ -232,7 +269,19 @@ public class AuthorizationClient {
         form.add("client_assertion_type", "urn:ietf:params:oauth:client-assertion-type:jwt-bearer"); // signed jwt client
         form.add("client_assertion", util.generateJwtAssertion());
         form.add("refresh_token", decryptedCookie);
-        WebClientOptions options = new WebClientOptions().setKeepAlive(true).setSsl(true).setVerifyHost(false).setTrustAll(true); // FIXME Trust CA
+        WebClientOptions options = new WebClientOptions()
+                .setKeepAlive(true)
+                .setSsl(true)
+                .setPfxKeyCertOptions(
+                        new PfxOptions()
+                                .setPath("example.client.p12")
+                                .setPassword("password")
+                )
+                .setPfxTrustOptions(
+                        new PfxOptions()
+                                .setPath("keystore.p12")
+                                .setPassword("password")
+                );
         WebClient.create(vertx, options)
                 .postAbs(authServer + "/auth/realms/" + realm + "/protocol/openid-connect/logout")
                 .putHeader("Content-Type", ContentType.APPLICATION_FORM_URLENCODED.toString())

@@ -17,7 +17,7 @@ The SPA uses these configuration settings and does not need to understand detail
 
 The example SPA makes OAuth requests using HTTP Only secure SameSite cookies via the [OAuthClient class](./src/oauth/oauthClient.ts).\
 The SPA runs with a web origin of `www.example.com` and calls a BFF API in the `api.example.com` domain.
-w
+
 ```ts
 const url = await oauthClient.startLogin();
 location.href=url;

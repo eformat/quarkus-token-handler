@@ -44,6 +44,24 @@
   "requiredCredentials": [
     "password"
   ],
+  "components": {
+    "org.keycloak.keys.KeyProvider": [
+      {
+        "id": "85a15494-513e-4ff7-8921-4eca29727627",
+        "name": "fallback-PS256",
+        "providerId": "rsa-generated",
+        "subComponents": {},
+        "config": {
+          "priority": [
+            "-100"
+          ],
+          "algorithm": [
+            "PS256"
+          ]
+        }
+      }
+    ]
+  },        
   "clients": [
     {
       "clientId": "bff_client",
@@ -71,7 +89,8 @@
         "pkce.code.challenge.method": "S256",
         "use.refresh.tokens": "true",
         "use.jwks.url": "true",
-        "jwks.url": "http://192.168.86.109:7080/tokenhandler/jwk"
+        "jwks.url": "https://api.example.com:7443/tokenhandler/jwk",
+        "tls.client.certificate.bound.access.tokens": "true"
       }
     }
   ],

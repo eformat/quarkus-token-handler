@@ -38,7 +38,7 @@ TRUSTSTORE_NAME='Self Signed CA for example.com'
 #
 SERVER_KEYSTORE_FILE_PREFIX='example.server'
 SERVER_KEYSTORE_PASSWORD='password'
-WILDCARD_DOMAIN_NAME='*.example.com'
+DOMAIN_NAME='www.example.com'
 
 #
 # Client certificate parameters used for Mutual TLS
@@ -76,7 +76,7 @@ openssl req \
     -new \
     -key $SERVER_KEYSTORE_FILE_PREFIX.key \
     -out $SERVER_KEYSTORE_FILE_PREFIX.csr \
-    -subj "/CN=$WILDCARD_DOMAIN_NAME"
+    -subj "/CN=$DOMAIN_NAME"
 echo '*** Successfully created server certificate signing request'
 
 openssl x509 -req \
@@ -94,7 +94,7 @@ echo '*** Successfully created server certificate'
 openssl pkcs12 \
     -export -inkey $SERVER_KEYSTORE_FILE_PREFIX.key \
     -in $SERVER_KEYSTORE_FILE_PREFIX.pem \
-    -name $WILDCARD_DOMAIN_NAME \
+    -name $DOMAIN_NAME \
     -out $SERVER_KEYSTORE_FILE_PREFIX.p12 \
     -passout pass:$SERVER_KEYSTORE_PASSWORD
 echo '*** Successfully exported server certificate to a PKCS#12 file'
@@ -146,6 +146,6 @@ echo '*** Successfully exported root CA to a PKCS#12 file'
 #
 # Remove files we no longer need
 #
-rm example.server.csr
-rm example.client.csr
-rm example.srl
+rm -f example.server.csr
+rm -f example.client.csr
+rm -f example.srl

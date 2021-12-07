@@ -10,6 +10,9 @@ services:
       DB_VENDOR: h2
       KEYCLOAK_USER: admin
       KEYCLOAK_PASSWORD: admin
-      #KEYCLOAK_LOGLEVEL: DEBUG
+      X509_CA_BUNDLE: "/var/run/secrets/example.ca.pem"
+      KEYCLOAK_LOGLEVEL: DEBUG
       DEBUG: 'true'
       DEBUG_PORT: '*:8787'
+    volumes:
+      - ./example.ca.pem:/var/run/secrets/example.ca.pem:Z
