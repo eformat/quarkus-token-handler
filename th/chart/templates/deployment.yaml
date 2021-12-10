@@ -42,8 +42,8 @@ spec:
           livenessProbe:
             httpGet:
               path: /q/health/live
-              port: 8080
-              scheme: HTTP
+              port: 8443
+              scheme: HTTPS
             timeoutSeconds: 1
             periodSeconds: 10
             successThreshold: 1
@@ -56,8 +56,8 @@ spec:
           readinessProbe:
             httpGet:
               path: /q/health/ready
-              port: 8080
-              scheme: HTTP
+              port: 8443
+              scheme: HTTPS
             timeoutSeconds: 1
             periodSeconds: 10
             successThreshold: 1

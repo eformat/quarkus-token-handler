@@ -8,7 +8,7 @@ metadata:
     {{- include "quarkus-token-handler.labels" . | nindent 4 }}
 spec:
   port:
-    targetPort: tcp-8443
+    targetPort: tcp-8080
   to:
     kind: Service
     name: {{ include "quarkus-token-handler.fullname" . }}
