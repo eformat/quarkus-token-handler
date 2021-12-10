@@ -10,6 +10,7 @@ import io.vertx.core.net.ProxyType;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.proxy.handler.ProxyHandler;
 import io.vertx.httpproxy.HttpProxy;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -28,6 +29,27 @@ public class Proxy {
 
     @Inject
     Util util;
+
+    @ConfigProperty(name = "proxyServerHttpPort")
+    int proxyServerHttpPort;
+
+    @ConfigProperty(name = "proxyServerHttpsPort")
+    int proxyServerHttpsPort;
+
+    @ConfigProperty(name = "tokenHandlerPort")
+    int tokenHandlerPort;
+
+    @ConfigProperty(name = "tokenHandlerService")
+    String tokenHandlerService;
+
+    @ConfigProperty(name = "proxyService")
+    String proxyService;
+
+    @ConfigProperty(name = "apiHandlerPort")
+    int apiHandlerPort;
+
+    @ConfigProperty(name = "apiHandlerService")
+    String apiHandlerService;
 
     void onStart(@Observes StartupEvent ev) {
         httpProxy();
@@ -49,10 +71,10 @@ public class Proxy {
         proxyOptions.setType(ProxyType.HTTP);
 
         HttpProxy tokenProxy = HttpProxy.reverseProxy(proxyClient);
-        tokenProxy.origin(7080, "localhost");
+        tokenProxy.origin(proxyServerHttpPort, tokenHandlerService);
 
         HttpProxy apiProxy = HttpProxy.reverseProxy(proxyClient);
-        apiProxy.origin(3002, "localhost");
+        apiProxy.origin(apiHandlerPort, apiHandlerService);
 
         proxyRouter.route("/api/*").handler(event -> {
             if (event.request().cookies("example-auth") != null) {
@@ -81,7 +103,7 @@ public class Proxy {
         serverOptions.setUseAlpn(true);
 
         HttpServer proxyServer = vertx.createHttpServer(serverOptions);
-        proxyServer.requestHandler(proxyRouter).listen(9443);
+        proxyServer.requestHandler(proxyRouter).listen(proxyServerHttpsPort);
 
         log.info(">>> HTTPS Proxy started");
 
@@ -94,10 +116,10 @@ public class Proxy {
         Router proxyRouter = Router.router(vertx);
 
         HttpProxy tokenProxy = HttpProxy.reverseProxy(proxyClient);
-        tokenProxy.origin(7080, "localhost");
+        tokenProxy.origin(tokenHandlerPort, tokenHandlerService);
 
         HttpProxy apiProxy = HttpProxy.reverseProxy(proxyClient);
-        apiProxy.origin(3002, "localhost");
+        apiProxy.origin(apiHandlerPort, apiHandlerService);
 
         proxyRouter.route("/api/*").handler(event -> {
             if (event.request().cookies("example-auth") != null) {
@@ -120,7 +142,7 @@ public class Proxy {
                 .route("/api/*").handler(ProxyHandler.create(apiProxy));
 
         proxyServer.requestHandler(proxyRouter);
-        proxyServer.listen(9080);
+        proxyServer.listen(proxyServerHttpPort);
 
         log.info(">>> HTTP Proxy started");
     }
