@@ -1,4 +1,4 @@
-# token-handler
+# quarkus-token-handler
 
 ## API Endpoints
 

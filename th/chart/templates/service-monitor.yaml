@@ -1,0 +1,15 @@
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: {{ include "quarkus-token-handler.fullname" . }}
+  labels:
+    {{- include "quarkus-token-handler.labels" . | nindent 4 }}
+spec:
+  endpoints:
+    - interval: 30s
+      port: tcp-8080
+      scheme: http
+  selector:
+    matchLabels:
+    {{- include "quarkus-token-handler.labels" . | nindent 6 }}

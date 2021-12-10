@@ -1,0 +1,18 @@
+---
+apiVersion: operators.coreos.com/v1alpha1
+kind: Subscription
+metadata:
+  labels:
+    operators.coreos.com/keycloak-operator.keycloak: ""  
+    app.kubernetes.io/instance: keycloak
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+  name: keycloak-operator
+  namespace: token-handler
+spec:
+  channel: alpha
+  installPlanApproval: Automatic
+  name: keycloak-operator
+  source: community-operators
+  sourceNamespace: openshift-marketplace
+  startingCSV: keycloak-operator.v15.0.2

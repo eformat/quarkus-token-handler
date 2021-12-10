@@ -1,0 +1,5 @@
+namespace: token-handler
+
+resources:
+- ../base
+- keycloak_cr.yaml

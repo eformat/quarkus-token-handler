@@ -102,3 +102,12 @@ cd test
 ./test-token-handler.sh
 >>> 🌈 TESTING COMPLETED OK 🌈
 ```
+
+
+## Deploy to OpenShift
+
+As cluster-admin, create `token-handler` Project, Keycloak Operator, Keycloak instance, Applications
+```bash
+cd deploy
+oc apply -k dev
+```
