@@ -1,0 +1,14 @@
+apiVersion: v2
+name: quarkus-token-handler-api
+description: Token Handler API
+type: application
+version: 0.0.1
+appVersion: 0.0.1
+home: https://eformat.github.io/helm-charts
+icon: https://avatars1.githubusercontent.com/u/68044996?s=200&v=4
+kubeVersion: '>=1.11.0-0'
+keywords:
+- devops
+- web security
+maintainers:
+- name: eformat

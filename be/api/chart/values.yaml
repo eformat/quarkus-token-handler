@@ -1,0 +1,14 @@
+# OpenShift objects
+route: true
+# if false use a kube deployment instead
+deploymentConfig: false
+replicas:
+  min: 1
+  max: 1
+image_repository: quay.io
+image_name: quarkus-token-handler-api
+image_namespace: eformat
+image_version: latest
+# use the image specified above as tag (else tag overridden in pipeline say)
+istag:
+  enabled: true

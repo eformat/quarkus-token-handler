@@ -12,5 +12,8 @@ RUN npm install --production
 RUN addgroup -g 1001 apigroup
 RUN adduser -u 1001 -G apigroup -h /home/apiuser -D apiuser
 
+# FIXME
+COPY config-dev.json   /usr/api/config.json
+
 USER apiuser
 CMD ["node", "dist/server.js"]

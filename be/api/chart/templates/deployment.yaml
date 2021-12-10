@@ -1,0 +1,57 @@
+{{- if (ne .Values.deploymentConfig true) }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "quarkus-token-handler-api.fullname" . }}
+  annotations:
+    image.openshift.io/triggers: '[{"from":{"kind":"ImageStreamTag","name":"{{ include "quarkus-token-handler-api.fullname" . }}:{{ .Values.image_version }}"},"fieldPath":"spec.template.spec.containers[?(@.name==\"quarkus-token-handler-api\")].image"}]'
+  labels:
+    {{- include "quarkus-token-handler-api.labels" . | nindent 4 }}
+spec:
+  progressDeadlineSeconds: 600
+  replicas: {{ .Values.replicas.min }}
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      {{- include "quarkus-token-handler-api.selectorLabels" . | nindent 6 }}
+  strategy:
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+    type: RollingUpdate
+  template:
+    metadata:
+      annotations:
+        prometheus.io/scrape: 'true'
+        prometheus.io/path: '/q/metrics'
+        prometheus.io/port: '8080'
+        rollme: {{ randAlphaNum 5 | quote }}
+      labels:
+        {{- include "quarkus-token-handler-api.selectorLabels" . | nindent 8 }}
+    spec:
+      containers:
+        - env:
+            - name: NODE_ENV
+              value: production
+          image: ' '
+          imagePullPolicy: Always
+          name: {{ include "quarkus-token-handler-api.name" . }}
+          ports:
+            - containerPort: 8443
+              protocol: TCP
+          resources:
+            limits:
+              cpu: '600m'
+              memory: 1000Mi
+            requests:
+              cpu: '100m'
+              memory: 100Mi
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      schedulerName: default-scheduler
+      securityContext: {}
+      terminationGracePeriodSeconds: 30
+{{ end }}
