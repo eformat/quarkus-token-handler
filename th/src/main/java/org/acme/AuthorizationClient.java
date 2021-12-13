@@ -56,6 +56,9 @@ public class AuthorizationClient {
     @ConfigProperty(name = "cookieExpiresSec")
     int cookieExpiresSec;
 
+    @ConfigProperty(name = "trustStorePwd")
+    String trustStorePwd;
+
     @Inject
     Vertx vertx;
 
@@ -255,21 +258,22 @@ public class AuthorizationClient {
                     .setPfxTrustOptions(
                             new PfxOptions()
                                     .setPath("/var/run/secrets/keystore.p12")
-                                    .setPassword("password") // FIXME
+                                    .setPassword(trustStorePwd)
                     );
         } else {
             options = new WebClientOptions()
                     .setKeepAlive(true)
                     .setSsl(true)
-                    .setPfxKeyCertOptions(
-                            new PfxOptions()
-                                    .setPath("example.client.p12")
-                                    .setPassword("password") // FIXME
-                    )
+// FIXME - wip hok enforcer
+//                    .setPfxKeyCertOptions(
+//                            new PfxOptions()
+//                                    .setPath("example.client.p12")
+//                                    .setPassword(trustStorePwd)
+//                    )
                     .setPfxTrustOptions(
                             new PfxOptions()
                                     .setPath("keystore.p12")
-                                    .setPassword("password") // FIXME
+                                    .setPassword(trustStorePwd)
                     );
         }
         return options;

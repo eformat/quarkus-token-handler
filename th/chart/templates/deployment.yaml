@@ -60,6 +60,11 @@ spec:
                 secretKeyRef:
                   key: keycloak-clientSecret
                   name: {{ include "quarkus-token-handler.fullname" . }}
+            - name: TRUST_STORE_PWD
+              valueFrom:
+                secretKeyRef:
+                  key: trustStorePwd
+                  name: {{ include "quarkus-token-handler.fullname" . }}
             - name: TRUSTED_WEB_ORIGINS
               valueFrom:
                 secretKeyRef:

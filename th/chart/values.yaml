@@ -21,6 +21,7 @@ keycloak:
   realm: bff
   clientId: bff_client
   clientSecret: change-me
+trustStorePwd: change-me
 trustedWebOrigins: https://www.example.com
 redirectUri: https://www.example.com/
 cookieNamePrefix: example
