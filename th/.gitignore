@@ -42,3 +42,5 @@ keystore.p12
 private.key
 public.key
 public-jwk.key
+example.client.p12
+example.server.p12
