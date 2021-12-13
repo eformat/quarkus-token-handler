@@ -15,6 +15,10 @@ spec:
       protocol: TCP
       targetPort: 8443
       name: tcp-8443
+    - port: 5005
+      protocol: TCP
+      targetPort: 5005
+      name: tcp-5005
   selector:
     {{- include "quarkus-token-handler.selectorLabels" . | nindent 4 }}
   sessionAffinity: None

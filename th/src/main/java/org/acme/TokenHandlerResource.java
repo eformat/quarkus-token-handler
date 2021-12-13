@@ -81,7 +81,7 @@ public class TokenHandlerResource {
 
         // Cookie Options are important here as they determine token security in SPA
         return Response.ok(authRequestData.getUrl())
-                .header("Set-Cookie", cookieName.LOGIN() + "=" + util.encryptCookieValue(getCookieValue(authRequestData)) + "; Secure; HttpOnly; SameSite=strict; Domain=.example.com; Path=/; MaxAge=-1")
+                .header("Set-Cookie", cookieName.LOGIN() + "=" + util.encryptCookieValue(getCookieValue(authRequestData)) + "; Secure; HttpOnly; SameSite=strict; Domain=" + cookieName.DOMAIN() + "; Path=/; MaxAge=-1")
                 .build();
     }
 

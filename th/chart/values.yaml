@@ -12,3 +12,20 @@ image_version: latest
 # use the image specified above as tag (else tag overridden in pipeline say)
 istag:
   enabled: true
+frontend:
+  url: https://www.example.com
+# secrets all need overriding
+keycloak:
+  url: https://keycloak:8443
+  realm: bff
+  clientId: bff_client
+  clientSecret: change-me
+trustedWebOrigins: https://www.example.com
+redirectUri: https://www.example.com/
+cookieNamePrefix: example
+cookieDomain: .example.com
+cookieExpiresSec: 60
+encKey: change-me
+salt: change-me
+ivKey: change-me
+javaOptions: "-Dquarkus.http.host=0.0.0.0 -Djava.util.logging.manager=org.jboss.logmanager.LogManager" # -Djavax.net.ssl.trustStore=/var/run/secrets/keystore.p12" -Djavax.net.ssl.trustStorePassword=<password>

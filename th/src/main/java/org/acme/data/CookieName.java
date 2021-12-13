@@ -7,6 +7,9 @@ import javax.enterprise.context.ApplicationScoped;
 @ApplicationScoped
 public class CookieName {
 
+    @ConfigProperty(name = "cookieDomain")
+    String cookieDomain;
+
     @ConfigProperty(name = "cookieNamePrefix")
     String cookieNamePrefix;
 
@@ -35,4 +38,6 @@ public class CookieName {
         return cookieNamePrefix + "-csrf";
     }
 
+    // Cookie Domain
+    public String DOMAIN() { return cookieDomain; }
 }

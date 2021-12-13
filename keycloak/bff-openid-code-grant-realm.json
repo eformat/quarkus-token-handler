@@ -90,7 +90,7 @@
         "use.refresh.tokens": "true",
         "use.jwks.url": "true",
         "jwks.url": "https://api.example.com:7443/tokenhandler/jwk",
-        "tls.client.certificate.bound.access.tokens": "true"
+        "tls.client.certificate.bound.access.tokens": "false"
       }
     }
   ],

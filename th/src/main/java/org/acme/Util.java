@@ -27,6 +27,8 @@ public class Util {
     static String encKey = ConfigProvider.getConfig().getValue("encKey", String.class);
     static String ivKey = ConfigProvider.getConfig().getValue("ivKey", String.class);
     //static String kid = ConfigProvider.getConfig().getValue("smallrye.jwt.token.kid", String.class);
+    static String audience = ConfigProvider.getConfig().getValue("mp.jwt.verify.issuer", String.class);
+    static String clientId = ConfigProvider.getConfig().getValue("clientId", String.class);
 
     private static final Logger log = LoggerFactory.getLogger(Util.class);
 
@@ -108,7 +110,7 @@ public class Util {
 
     public static String generateRandomString(int length) throws NoSuchAlgorithmException {
         final String chrs = "0123456789abcdefghijklmnopqrstuvwxyz-_ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-        SecureRandom secureRandom = SecureRandom.getInstanceStrong();
+        SecureRandom secureRandom = SecureRandom.getInstance("NativePRNGNonBlocking");  //SecureRandom.getInstanceStrong(); # FIXME strong hangs in container, not enough entropy?
         return secureRandom.ints(length, 0, chrs.length()).mapToObj(i -> chrs.charAt(i))
                 .collect(StringBuilder::new, StringBuilder::append, StringBuilder::append).toString();
     }
@@ -140,11 +142,11 @@ public class Util {
     public String generateJwtAssertion() {
         String token = null;
         try {
-            token = Jwt.issuer("bff_client")
-                    .subject("bff_client")
+            token = Jwt.issuer(clientId)
+                    .subject(clientId)
                     .issuedAt(ZonedDateTime.now().toEpochSecond())
                     .expiresIn(10) // keep this short, allow for clock skew
-                    .audience("https://localhost:8443/auth/realms/bff")
+                    .audience(audience)
                     .claim("jti", generateRandomString(32)) // stop replay attacks
                     //.jws().keyId(kid)
                     .jws()

@@ -38,6 +38,63 @@ spec:
               value: prod
             - name: QUARKUS_LOG_LEVEL
               value: INFO
+            - name: QUARKUS_HTTP_CORS_ORIGINS
+              value: {{ .Values.frontend.url | quote }}
+            - name: KEYCLOAK_URL
+              valueFrom:
+                secretKeyRef:
+                  key: keycloak-url
+                  name: {{ include "quarkus-token-handler.fullname" . }}
+            - name: KEYCLOAK_REAM
+              valueFrom:
+                secretKeyRef:
+                  key: keycloak-realm
+                  name: {{ include "quarkus-token-handler.fullname" . }}
+            - name: KEYCLOAK_CLIENT_ID
+              valueFrom:
+                secretKeyRef:
+                  key: keycloak-clientId
+                  name: {{ include "quarkus-token-handler.fullname" . }}
+            - name: KEYCLOAK_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  key: keycloak-clientSecret
+                  name: {{ include "quarkus-token-handler.fullname" . }}
+            - name: TRUSTED_WEB_ORIGINS
+              valueFrom:
+                secretKeyRef:
+                  key: trustedWebOrigins
+                  name: {{ include "quarkus-token-handler.fullname" . }}
+            - name: REDIRECT_URI
+              valueFrom:
+                secretKeyRef:
+                  key: redirectUri
+                  name: {{ include "quarkus-token-handler.fullname" . }}
+            - name: COOKIE_NAME_PREFIX
+              valueFrom:
+                secretKeyRef:
+                  key: cookieNamePrefix
+                  name: {{ include "quarkus-token-handler.fullname" . }}
+            - name: COOKIE_EXPIRES_SEC
+              valueFrom:
+                secretKeyRef:
+                  key: cookieExpiresSec
+                  name: {{ include "quarkus-token-handler.fullname" . }}
+            - name: COOKIE_ENCRYPTION_KEY
+              valueFrom:
+                secretKeyRef:
+                  key: encKey
+                  name: {{ include "quarkus-token-handler.fullname" . }}
+            - name: COOKIE_ENCRYPTION_SALT
+              valueFrom:
+                secretKeyRef:
+                  key: salt
+                  name: {{ include "quarkus-token-handler.fullname" . }}
+            - name: COOKIE_ENCYPTION_IV
+              valueFrom:
+                secretKeyRef:
+                  key: ivKey
+                  name: {{ include "quarkus-token-handler.fullname" . }}
           image: ''
           imagePullPolicy: Always
           name: {{ include "quarkus-token-handler.name" . }}

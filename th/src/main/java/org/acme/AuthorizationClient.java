@@ -26,6 +26,7 @@ import org.slf4j.LoggerFactory;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.ws.rs.core.Response;
+import java.io.File;
 import java.security.NoSuchAlgorithmException;
 import java.time.Instant;
 import java.time.ZoneOffset;
@@ -114,19 +115,7 @@ public class AuthorizationClient {
         form.add("client_assertion_type", "urn:ietf:params:oauth:client-assertion-type:jwt-bearer"); // signed jwt client
         form.add("client_assertion", util.generateJwtAssertion());
         form.add("code_verifier", codeVerifier); // PKCE
-        WebClientOptions options = new WebClientOptions()
-                .setKeepAlive(true)
-                .setSsl(true)
-                .setPfxKeyCertOptions(
-                        new PfxOptions()
-                                .setPath("example.server.p12")
-                                .setPassword("password")
-                )
-                .setPfxTrustOptions(
-                        new PfxOptions()
-                                .setPath("keystore.p12")
-                                .setPassword("password")
-                );
+        WebClientOptions options = getOptions();
         return WebClient.create(vertx, options)
                 .postAbs(authServer + "/auth/realms/" + realm + "/protocol/openid-connect/token")
                 .putHeader("Content-Type", ContentType.APPLICATION_FORM_URLENCODED.toString())
@@ -144,19 +133,7 @@ public class AuthorizationClient {
         form.add("client_assertion_type", "urn:ietf:params:oauth:client-assertion-type:jwt-bearer"); // signed jwt client
         form.add("client_assertion", util.generateJwtAssertion());
         form.add("refresh_token", decryptedCookie);
-        WebClientOptions options = new WebClientOptions()
-                .setKeepAlive(true)
-                .setSsl(true)
-                .setPfxKeyCertOptions(
-                        new PfxOptions()
-                                .setPath("example.client.p12")
-                                .setPassword("password")
-                )
-                .setPfxTrustOptions(
-                        new PfxOptions()
-                                .setPath("keystore.p12")
-                                .setPassword("password")
-                );
+        WebClientOptions options = getOptions();
         Uni<JsonObject> response = WebClient.create(vertx, options)
                 .postAbs(authServer + "/auth/realms/" + realm + "/protocol/openid-connect/token")
                 .putHeader("Content-Type", ContentType.APPLICATION_FORM_URLENCODED.toString())
@@ -189,20 +166,9 @@ public class AuthorizationClient {
         form.add("code_challenge", util.getCodeChallenge(codeVerifier)); // PKCE
         form.add("code_challenge_method", "S256"); // PCKE method
         form.add("redirect_uri", redirectUri); // we set this so must match realm settings
+        log.debug(">> PAR request: " + form);
         // OAuth 2.0 Pushed Authorization Requests
-        WebClientOptions options = new WebClientOptions()
-                .setKeepAlive(true)
-                .setSsl(true)
-                .setPfxKeyCertOptions(
-                        new PfxOptions()
-                                .setPath("example.client.p12")
-                                .setPassword("password")
-                )
-                .setPfxTrustOptions(
-                        new PfxOptions()
-                                .setPath("keystore.p12")
-                                .setPassword("password")
-                );
+        WebClientOptions options = getOptions();
         Uni<JsonObject> response = WebClient.create(vertx, options)
                 .postAbs(authServer + "/auth/realms/" + realm + "/protocol/openid-connect/ext/par/request")
                 .putHeader("Content-Type", ContentType.APPLICATION_FORM_URLENCODED.toString())
@@ -229,35 +195,35 @@ public class AuthorizationClient {
         if (null != tokenResponse) {
             if (tokenResponse.getString("id_token") != null && !tokenResponse.getString("id_token").isEmpty()) {
                 responseBuilder
-                        .header("Set-Cookie", cookieName.ID() + "=" + util.encryptCookieValue(tokenResponse.getString("id_token")) + "; Secure; HttpOnly; SameSite=strict; Domain=.example.com; Path=/;" + expires);
+                        .header("Set-Cookie", cookieName.ID() + "=" + util.encryptCookieValue(tokenResponse.getString("id_token")) + "; Secure; HttpOnly; SameSite=strict; Domain=" + cookieName.DOMAIN() + "; Path=/;" + expires);
             }
             if (tokenResponse.getString("access_token") != null && !tokenResponse.getString("access_token").isEmpty()) {
                 responseBuilder
-                        .header("Set-Cookie", cookieName.ACCESS() + "=" + util.encryptCookieValue(tokenResponse.getString("access_token")) + "; Secure; HttpOnly; SameSite=strict; Domain=.example.com; Path=/;" + expires);
+                        .header("Set-Cookie", cookieName.ACCESS() + "=" + util.encryptCookieValue(tokenResponse.getString("access_token")) + "; Secure; HttpOnly; SameSite=strict; Domain=" + cookieName.DOMAIN() + "; Path=/;" + expires);
             }
             if (tokenResponse.getString("refresh_token") != null && !tokenResponse.getString("refresh_token").isEmpty()) {
                 responseBuilder
-                        .header("Set-Cookie", cookieName.REFRESH() + "=" + util.encryptCookieValue(tokenResponse.getString("refresh_token")) + "; Secure; HttpOnly; SameSite=strict; Domain=.example.com; Path=/;" + expires);
+                        .header("Set-Cookie", cookieName.REFRESH() + "=" + util.encryptCookieValue(tokenResponse.getString("refresh_token")) + "; Secure; HttpOnly; SameSite=strict; Domain=" + cookieName.DOMAIN() + "; Path=/;" + expires);
             }
         }
         if (null != csrfToken && !csrfToken.isEmpty()) {
             responseBuilder
-                    .header("Set-Cookie", cookieName.CSRF() + "=" + util.encryptCookieValue(csrfToken) + "; Secure; HttpOnly; SameSite=strict; Domain=.example.com; Path=/;" + expires);
+                    .header("Set-Cookie", cookieName.CSRF() + "=" + util.encryptCookieValue(csrfToken) + "; Secure; HttpOnly; SameSite=strict; Domain=" + cookieName.DOMAIN() + "; Path=/;" + expires);
         }
         if (unsetLoginCookie) {
             var epoch = Instant.EPOCH.atZone(ZoneOffset.UTC);
             responseBuilder
-                    .header("Set-Cookie", cookieName.LOGIN() + "=; Secure; HttpOnly; SameSite=strict; Domain=.example.com; Path=/; Expires=" + epoch.format(DateTimeFormatter.RFC_1123_DATE_TIME));
+                    .header("Set-Cookie", cookieName.LOGIN() + "=; Secure; HttpOnly; SameSite=strict; Domain=" + cookieName.DOMAIN() + "; Path=/; Expires=" + epoch.format(DateTimeFormatter.RFC_1123_DATE_TIME));
         }
     }
 
     public void getCookiesForUnset(Response.ResponseBuilder responseBuilder) {
         var epoch = Instant.EPOCH.atZone(ZoneOffset.UTC);
         responseBuilder
-                .header("Set-Cookie", cookieName.ID() + "=" + "; Secure; HttpOnly; SameSite=strict; Domain=.example.com; Path=/; Expires=" + epoch.format(DateTimeFormatter.RFC_1123_DATE_TIME))
-                .header("Set-Cookie", cookieName.ACCESS() + "=" + "; Secure; HttpOnly; SameSite=strict; Domain=.example.com; Path=/; Expires=" + epoch.format(DateTimeFormatter.RFC_1123_DATE_TIME))
-                .header("Set-Cookie", cookieName.REFRESH() + "=" + "; Secure; HttpOnly; SameSite=strict; Domain=.example.com; Path=/; Expires=" + epoch.format(DateTimeFormatter.RFC_1123_DATE_TIME))
-                .header("Set-Cookie", cookieName.CSRF() + "=" + "; Secure; HttpOnly; SameSite=strict; Domain=.example.com; Path=/; Expires=" + epoch.format(DateTimeFormatter.RFC_1123_DATE_TIME));
+                .header("Set-Cookie", cookieName.ID() + "=" + "; Secure; HttpOnly; SameSite=strict; Domain=" + cookieName.DOMAIN() + "; Path=/; Expires=" + epoch.format(DateTimeFormatter.RFC_1123_DATE_TIME))
+                .header("Set-Cookie", cookieName.ACCESS() + "=" + "; Secure; HttpOnly; SameSite=strict; Domain=" + cookieName.DOMAIN() + "; Path=/; Expires=" + epoch.format(DateTimeFormatter.RFC_1123_DATE_TIME))
+                .header("Set-Cookie", cookieName.REFRESH() + "=" + "; Secure; HttpOnly; SameSite=strict; Domain=" + cookieName.DOMAIN() + "; Path=/; Expires=" + epoch.format(DateTimeFormatter.RFC_1123_DATE_TIME))
+                .header("Set-Cookie", cookieName.CSRF() + "=" + "; Secure; HttpOnly; SameSite=strict; Domain=" + cookieName.DOMAIN() + "; Path=/; Expires=" + epoch.format(DateTimeFormatter.RFC_1123_DATE_TIME));
     }
 
     public JsonObject logout(String encryptedCookie) {
@@ -269,19 +235,7 @@ public class AuthorizationClient {
         form.add("client_assertion_type", "urn:ietf:params:oauth:client-assertion-type:jwt-bearer"); // signed jwt client
         form.add("client_assertion", util.generateJwtAssertion());
         form.add("refresh_token", decryptedCookie);
-        WebClientOptions options = new WebClientOptions()
-                .setKeepAlive(true)
-                .setSsl(true)
-                .setPfxKeyCertOptions(
-                        new PfxOptions()
-                                .setPath("example.client.p12")
-                                .setPassword("password")
-                )
-                .setPfxTrustOptions(
-                        new PfxOptions()
-                                .setPath("keystore.p12")
-                                .setPassword("password")
-                );
+        WebClientOptions options = getOptions();
         WebClient.create(vertx, options)
                 .postAbs(authServer + "/auth/realms/" + realm + "/protocol/openid-connect/logout")
                 .putHeader("Content-Type", ContentType.APPLICATION_FORM_URLENCODED.toString())
@@ -289,5 +243,35 @@ public class AuthorizationClient {
                 .onItem().transform(HttpResponse::bodyAsJsonObject)
                 .await().indefinitely();//.onFailure(); FIXME error handler
         return new JsonObject().put("url", redirectUri);
+    }
+
+    private WebClientOptions getOptions() {
+        File ca = new File("/var/run/secrets/keystore.p12");
+        WebClientOptions options = null;
+        if (ca.exists()) {
+            options = new WebClientOptions()
+                    .setKeepAlive(true)
+                    .setSsl(true)
+                    .setPfxTrustOptions(
+                            new PfxOptions()
+                                    .setPath("/var/run/secrets/keystore.p12")
+                                    .setPassword("password") // FIXME
+                    );
+        } else {
+            options = new WebClientOptions()
+                    .setKeepAlive(true)
+                    .setSsl(true)
+                    .setPfxKeyCertOptions(
+                            new PfxOptions()
+                                    .setPath("example.client.p12")
+                                    .setPassword("password") // FIXME
+                    )
+                    .setPfxTrustOptions(
+                            new PfxOptions()
+                                    .setPath("keystore.p12")
+                                    .setPassword("password") // FIXME
+                    );
+        }
+        return options;
     }
 }
