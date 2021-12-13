@@ -8,8 +8,8 @@ metadata:
 spec:
   endpoints:
     - interval: 30s
-      port: tcp-8443
-      scheme: https
+      port: tcp-8080
+      scheme: http
   selector:
     matchLabels:
     {{- include "quarkus-token-handler-api.labels" . | nindent 6 }}

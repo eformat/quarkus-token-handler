@@ -7,10 +7,10 @@ metadata:
     {{- include "quarkus-token-handler-api.labels" . | nindent 4 }}
 spec:
   ports:
-    - port: 8443
+    - port: 8080
       protocol: TCP
-      targetPort: 8443
-      name: tcp-8443
+      targetPort: 8080
+      name: tcp-8080
   selector:
     {{- include "quarkus-token-handler-api.selectorLabels" . | nindent 4 }}
   sessionAffinity: None
