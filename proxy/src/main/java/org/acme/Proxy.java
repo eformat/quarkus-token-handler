@@ -42,14 +42,14 @@ public class Proxy {
     @ConfigProperty(name = "tokenHandlerService")
     String tokenHandlerService;
 
-    @ConfigProperty(name = "proxyService")
-    String proxyService;
-
     @ConfigProperty(name = "apiHandlerPort")
     int apiHandlerPort;
 
     @ConfigProperty(name = "apiHandlerService")
     String apiHandlerService;
+
+    @ConfigProperty(name = "cookieNamePrefix")
+    String cookieNamePrefix;
 
     void onStart(@Observes StartupEvent ev) {
         httpProxy();
@@ -77,8 +77,8 @@ public class Proxy {
         apiProxy.origin(apiHandlerPort, apiHandlerService);
 
         proxyRouter.route("/api/*").handler(event -> {
-            if (event.request().cookies("example-auth") != null) {
-                Set<Cookie> cookies = event.request().cookies("example-at");
+            if (event.request().cookies(cookieNamePrefix + "-auth") != null) {
+                Set<Cookie> cookies = event.request().cookies(cookieNamePrefix + "-at");
                 if (!cookies.isEmpty()) {
                     String decrytedCookie = util.decryptCookieValue(cookies.iterator().next().getValue());
                     event.request().headers().add("Authorization", "Bearer " + decrytedCookie);
@@ -89,10 +89,6 @@ public class Proxy {
 
         proxyRouter
                 .route("/tokenhandler/*").handler(ProxyHandler.create(tokenProxy));
-        proxyRouter
-                .route("/tokenhandler/*").handler(ProxyHandler.create(tokenProxy));
-        proxyRouter
-                .route("/api/*").handler(ProxyHandler.create(apiProxy));
         proxyRouter
                 .route("/api/*").handler(ProxyHandler.create(apiProxy));
 
@@ -122,8 +118,8 @@ public class Proxy {
         apiProxy.origin(apiHandlerPort, apiHandlerService);
 
         proxyRouter.route("/api/*").handler(event -> {
-            if (event.request().cookies("example-auth") != null) {
-                Set<Cookie> cookies = event.request().cookies("example-at");
+            if (event.request().cookies(cookieNamePrefix + "-auth") != null) {
+                Set<Cookie> cookies = event.request().cookies(cookieNamePrefix + "-at");
                 if (!cookies.isEmpty()) {
                     String decrytedCookie = util.decryptCookieValue(cookies.iterator().next().getValue());
                     event.request().headers().add("Authorization", "Bearer " + decrytedCookie);
@@ -134,10 +130,6 @@ public class Proxy {
 
         proxyRouter
                 .route("/tokenhandler/*").handler(ProxyHandler.create(tokenProxy));
-        proxyRouter
-                .route("/tokenhandler/*").handler(ProxyHandler.create(tokenProxy));
-        proxyRouter
-                .route("/api/*").handler(ProxyHandler.create(apiProxy));
         proxyRouter
                 .route("/api/*").handler(ProxyHandler.create(apiProxy));
 

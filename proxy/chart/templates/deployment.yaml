@@ -36,6 +36,26 @@ spec:
               value: prod
             - name: QUARKUS_LOG_LEVEL
               value: INFO
+            - name: COOKIE_ENCRYPTION_KEY
+              valueFrom:
+                secretKeyRef:
+                  key: encKey
+                  name: {{ include "quarkus-token-handler-proxy.fullname" . }}
+            - name: COOKIE_ENCRYPTION_SALT
+              valueFrom:
+                secretKeyRef:
+                  key: salt
+                  name: {{ include "quarkus-token-handler-proxy.fullname" . }}
+            - name: COOKIE_ENCYPTION_IV
+              valueFrom:
+                secretKeyRef:
+                  key: ivKey
+                  name: {{ include "quarkus-token-handler-proxy.fullname" . }}
+            - name: COOKIE_NAME_PREFIX
+              valueFrom:
+                secretKeyRef:
+                  key: cookieNamePrefix
+                  name: {{ include "quarkus-token-handler-proxy.fullname" . }}
           image: ' '
           imagePullPolicy: Always
           name: {{ include "quarkus-token-handler-proxy.name" . }}

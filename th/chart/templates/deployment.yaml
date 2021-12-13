@@ -38,6 +38,8 @@ spec:
               value: INFO
             - name: QUARKUS_HTTP_CORS_ORIGINS
               value: {{ .Values.frontend.url | quote }}
+            - name: CSP
+              value: {{ .Values.csp | quote }}
             - name: KEYCLOAK_URL
               valueFrom:
                 secretKeyRef:

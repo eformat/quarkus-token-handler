@@ -12,3 +12,8 @@ image_version: latest
 # use the image specified above as tag (else tag overridden in pipeline say)
 istag:
   enabled: true
+# secrets all need overriding
+encKey: change-me
+salt: change-me
+ivKey: change-me
+cookieNamePrefix: example
