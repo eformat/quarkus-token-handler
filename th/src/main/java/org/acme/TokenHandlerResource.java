@@ -14,6 +14,7 @@ import org.acme.exceptions.InvalidStateException;
 import org.acme.exceptions.UnauthorizedException;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.utils.URLEncodedUtils;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.jwt.JsonWebToken;
 import org.jboss.resteasy.reactive.RestResponse;
 import org.jboss.resteasy.reactive.server.core.ResteasyReactiveRequestContext;
@@ -25,10 +26,7 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.charset.Charset;
@@ -59,6 +57,9 @@ public class TokenHandlerResource {
 
     @Inject
     JWTParser parser;
+
+    @ConfigProperty(name = "jwt.public.key.location")
+    String jwtPublicKey;
 
     record OAuthQueryParams(String code, String state) {
     }
@@ -309,7 +310,10 @@ public class TokenHandlerResource {
     @Produces(MediaType.APPLICATION_JSON)
     @Path("jwk")
     public String getPublicJwk() throws ParseException, GeneralSecurityException, IOException {
-        InputStream is = getClass().getClassLoader().getResourceAsStream("public-jwk.key");
+        InputStream is = getClass().getClassLoader().getResourceAsStream(jwtPublicKey);
+        if (null == is) {
+            is = new FileInputStream(jwtPublicKey);
+        }
         String publicKey = new BufferedReader(
                 new InputStreamReader(is, StandardCharsets.UTF_8)).lines()
                 .collect(Collectors.joining("\n"));
