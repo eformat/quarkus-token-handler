@@ -38,7 +38,7 @@ public class AuthorizationClient {
 
     private final Logger log = LoggerFactory.getLogger(AuthorizationClient.class);
 
-    @ConfigProperty(name = "authServer")
+    @ConfigProperty(name = "keycloak.url")
     String authServer;
 
     @ConfigProperty(name = "redirectUri")
