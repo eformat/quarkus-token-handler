@@ -1,0 +1,265 @@
+{
+  "realm": "bff",
+  "defaultSignatureAlgorithm": "PS256",
+  "revokeRefreshToken": false,
+  "refreshTokenMaxReuse": 0,
+  "accessTokenLifespan": 300,
+  "accessTokenLifespanForImplicitFlow": 900,
+  "ssoSessionIdleTimeout": 1800,
+  "ssoSessionMaxLifespan": 36000,
+  "ssoSessionIdleTimeoutRememberMe": 0,
+  "ssoSessionMaxLifespanRememberMe": 0,
+  "offlineSessionIdleTimeout": 2592000,
+  "offlineSessionMaxLifespanEnabled": false,
+  "offlineSessionMaxLifespan": 5184000,
+  "clientSessionIdleTimeout": 0,
+  "clientSessionMaxLifespan": 0,
+  "clientOfflineSessionIdleTimeout": 0,
+  "clientOfflineSessionMaxLifespan": 0,
+  "accessCodeLifespan": 60,
+  "accessCodeLifespanUserAction": 300,
+  "accessCodeLifespanLogin": 1800,
+  "actionTokenGeneratedByAdminLifespan": 43200,
+  "actionTokenGeneratedByUserLifespan": 300,
+  "oauth2DeviceCodeLifespan": 600,
+  "oauth2DevicePollingInterval": 5,
+  "enabled": true,
+  "sslRequired": "external",
+  "registrationAllowed": false,
+  "registrationEmailAsUsername": false,
+  "rememberMe": false,
+  "verifyEmail": false,
+  "loginWithEmailAllowed": true,
+  "duplicateEmailsAllowed": false,
+  "resetPasswordAllowed": false,
+  "editUsernameAllowed": false,
+  "bruteForceProtected": false,
+  "permanentLockout": false,
+  "maxFailureWaitSeconds": 900,
+  "minimumQuickLoginWaitSeconds": 60,
+  "waitIncrementSeconds": 60,
+  "quickLoginCheckMilliSeconds": 1000,
+  "maxDeltaTimeSeconds": 43200,
+  "failureFactor": 30,
+  "requiredCredentials": [
+    "password"
+  ],
+  "components": {
+    "org.keycloak.keys.KeyProvider": [
+      {
+        "id": "85a15494-513e-4ff7-8921-4eca29727627",
+        "name": "fallback-PS256",
+        "providerId": "rsa-generated",
+        "subComponents": {},
+        "config": {
+          "priority": [
+            "-100"
+          ],
+          "algorithm": [
+            "PS256"
+          ]
+        }
+      }
+    ]
+  },        
+  "clients": [
+    {
+      "clientId": "bff_client",
+      "enabled": true,
+      "clientAuthenticatorType": "client-jwt",
+      "secret": "1cd70bdf-db5b-4346-83da-babe16dae1d8",
+      "redirectUris": [
+        "https://www.example.com/"
+      ],
+      "webOrigins": [
+         "https://www.example.com/"
+      ],
+      "bearerOnly": false,
+      "consentRequired": false,
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": true,
+      "serviceAccountsEnabled": false,
+      "publicClient": false,
+      "frontchannelLogout": false,
+      "protocol": "openid-connect",
+      "attributes": {
+        "require.pushed.authorization.requests": "true",
+        "token.endpoint.auth.signing.alg": "PS256",
+        "pkce.code.challenge.method": "S256",
+        "use.refresh.tokens": "true",
+        "use.jwks.url": "true",
+        "jwks.url": "https://api.example.com:7443/tokenhandler/jwk",
+        "tls.client.certificate.bound.access.tokens": "false"
+      }
+    }
+  ],
+  "browserFlow": "browser",
+  "registrationFlow": "registration",
+  "directGrantFlow": "direct grant",
+  "resetCredentialsFlow": "reset credentials",
+  "clientAuthenticationFlow": "clients",
+  "dockerAuthenticationFlow": "docker auth",
+  "attributes": {
+    "require.pushed.authorization.requests": "true",
+    "pkce.code.challenge.method": "S256"
+  },
+  "keycloakVersion": "15.0.0",
+  "userManagedAccessAllowed": false,
+  "clientProfiles": {
+    "profiles": [
+      {
+        "name": "bff-fapi-1-baseline",
+        "executors": [
+          {
+            "executor": "secure-session",
+            "configuration": {}
+          },
+          {
+            "executor": "pkce-enforcer",
+            "configuration": {
+              "auto-configure": true
+            }
+          },
+          {
+            "executor": "secure-client-authenticator",
+            "configuration": {
+              "allowed-client-authenticators": [
+                "client-secret",
+                "client-jwt",
+                "client-x509"
+              ],
+              "default-client-authenticator": "client-jwt"
+            }
+          },
+          {
+            "executor": "secure-client-uris",
+            "configuration": {}
+          },
+          {
+            "executor": "consent-required",
+            "configuration": {}
+          },
+          {
+            "executor": "full-scope-disabled",
+            "configuration": {
+              "auto-configure": true
+            }
+          }
+        ]
+      },
+      {
+        "name": "bff-fapi-1-advanced",
+        "executors": [
+          {
+            "executor": "secure-session",
+            "configuration": {}
+          },
+          {
+            "executor": "confidential-client",
+            "configuration": {}
+          },
+          {
+            "executor": "secure-client-authenticator",
+            "configuration": {
+              "allowed-client-authenticators": [
+                "client-jwt",
+                "client-secret",
+                "client-x509",
+                "client-secret-jwt"
+              ],
+              "default-client-authenticator": "client-jwt"
+            }
+          },
+          {
+            "executor": "secure-client-uris",
+            "configuration": {}
+          },
+          {
+            "executor": "secure-response-type",
+            "configuration": {
+              "auto-configure": true,
+              "allow-token-response-type": false
+            }
+          },
+          {
+            "executor": "secure-signature-algorithm",
+            "configuration": {
+              "default-algorithm": "PS256"
+            }
+          },
+          {
+            "executor": "secure-signature-algorithm-signed-jwt",
+            "configuration": {
+              "require-client-assertion": false
+            }
+          },
+          {
+            "executor": "consent-required",
+            "configuration": {}
+          },
+          {
+            "executor": "full-scope-disabled",
+            "configuration": {
+              "auto-configure": true
+            }
+          }
+        ]
+      }
+    ]
+  },    
+  "clientPolicies": {
+    "policies": [
+      {
+        "name": "fapi",
+        "enabled": true,
+        "conditions": [
+          {
+            "condition": "any-client",
+            "configuration": {}
+          }
+        ],
+          "profiles": [
+              "fapi-1-baseline",
+              "bff-fapi-1-advanced"
+              
+        ]
+      }
+    ]
+  },
+  "users" : [
+      {
+          "username" : "user",
+          "enabled": true,
+          "email" : "sample-user@example",
+          "firstName": "Sample",
+          "lastName": "User",
+          "credentials" : [
+              { "type" : "password",
+                "value" : "password" }
+          ],
+          "realmRoles": [ "user" ],
+          "clientRoles": {
+              "account": ["view-profile", "manage-account"]
+          }
+      }
+  ],
+  "roles" : {
+      "realm" : [
+          {
+              "name": "user",
+              "description": "User privileges"
+          },
+          {
+              "name": "admin",
+              "description": "Administrator privileges"
+          }
+      ]
+  },
+  "scopeMappings": [
+      {
+          "client": "bff_client",
+          "roles": ["user"]
+      }
+  ]
+}

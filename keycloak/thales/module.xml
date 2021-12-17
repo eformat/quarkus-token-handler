@@ -1,0 +1,9 @@
+<module name="com.safenetinc.luna" xmlns="urn:jboss:module:1.9">
+    <resources>
+      <resource-root path="LunaProvider.jar"/>
+    </resources>
+    <dependencies>
+      <module name="java.logging"/>
+    </dependencies>
+  </module>
+  
