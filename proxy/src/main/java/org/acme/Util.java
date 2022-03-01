@@ -11,12 +11,14 @@ import javax.crypto.spec.PBEKeySpec;
 import javax.crypto.spec.SecretKeySpec;
 import javax.enterprise.context.ApplicationScoped;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.KeySpec;
+import java.util.Arrays;
 import java.util.Base64;
 
 @ApplicationScoped
@@ -26,16 +28,14 @@ public class Util {
 
     static String salt = ConfigProvider.getConfig().getValue("salt", String.class);
     static String encKey = ConfigProvider.getConfig().getValue("encKey", String.class);
-    static String ivKey = ConfigProvider.getConfig().getValue("ivKey", String.class);
 
     public static SecretKey key = getKeyFromPassword(encKey, salt);//generateKey(128);
-    public static IvParameterSpec ivParameterSpec = new IvParameterSpec(ivKey.getBytes(Charset.forName("UTF8")));//generateIv();
     public static final String algorithm = "AES/CBC/PKCS5Padding";
 
     public static String decryptCookieValue(String cookieParameter) throws ForbiddenException {
         String plainText = null;
         try {
-            plainText = decrypt(algorithm, cookieParameter, key, ivParameterSpec);
+            plainText = decrypt(algorithm, cookieParameter, key);
 
         } catch (Exception e) {
             log.warn(e.getMessage());
@@ -44,15 +44,16 @@ public class Util {
         return plainText;
     }
 
-    public static String decrypt(String algorithm, String cipherText, SecretKey key,
-                                 IvParameterSpec iv) throws NoSuchPaddingException, NoSuchAlgorithmException,
+    public static String decrypt(String algorithm, String cipherText, SecretKey key) throws NoSuchPaddingException, NoSuchAlgorithmException,
             InvalidAlgorithmParameterException, InvalidKeyException,
             BadPaddingException, IllegalBlockSizeException {
-
+        byte[] b64decodedCipherText = Base64.getDecoder().decode(cipherText);
+        byte[] ivRaw = Arrays.copyOfRange(b64decodedCipherText, 0, 16);
+        IvParameterSpec iv = new IvParameterSpec(ivRaw);
+        byte[] trimmedCipherText = Arrays.copyOfRange(b64decodedCipherText, 16, b64decodedCipherText.length);
         Cipher cipher = Cipher.getInstance(algorithm);
         cipher.init(Cipher.DECRYPT_MODE, key, iv);
-        byte[] plainText = cipher.doFinal(Base64.getDecoder()
-                .decode(cipherText));
+        byte[] plainText = cipher.doFinal(trimmedCipherText);
         return new String(plainText);
     }
 
@@ -71,11 +72,5 @@ public class Util {
             System.exit(-1);
         }
         return secret;
-    }
-
-    public static IvParameterSpec generateIv() {
-        byte[] iv = new byte[16];
-        new SecureRandom().nextBytes(iv);
-        return new IvParameterSpec(iv);
     }
 }
