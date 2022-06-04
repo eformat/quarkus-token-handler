@@ -60,7 +60,7 @@ keytool -list -keystore keystore.p12 -storepass password -noprompt
 Keycloak
 ```bash
 cd keycloak
-podman-compose up -d
+podman-compose -t hostnet up -d
 ```
 
 Login to Keycloak admin web console and Add a new realm using `keycloak/bff-openid-code-grant-realm.json` file.
