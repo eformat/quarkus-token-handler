@@ -38,7 +38,7 @@ Load the CA `example.ca.pem` into your Web Browser trust store for demoing.
 Generate bff-client JWT certs
 ```bash
 cd test/certs
-go get github.com/lestrrat-go/jwx/cmd/jwx
+GO111MODULE=off go get github.com/lestrrat-go/jwx/cmd/jwx
 jwx jwk generate --type RSA --keysize 2048 --template '{"alg":"PS256","use":"sig"}' > private.key
 jwx jwk format --public-key private.key > public.key
 cp private.key ../../th/src/main/resources/
